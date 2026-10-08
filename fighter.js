@@ -12,6 +12,8 @@ export const FIGHTER_STATE = {
   CROUCH: 'CROUCH',
   PUNCH_LIGHT: 'PUNCH_LIGHT',
   PUNCH_HEAVY: 'PUNCH_HEAVY',
+  PUNCH: 'PUNCH_LIGHT',
+  HEAVY_PUNCH: 'PUNCH_HEAVY',
   KICK: 'KICK',
   LOW_KICK: 'LOW_KICK',
   JUMP_ATTACK: 'JUMP_ATTACK',
@@ -19,9 +21,58 @@ export const FIGHTER_STATE = {
   SUPER: 'SUPER',
   BLOCK: 'BLOCK',
   HIT: 'HIT',
+  HURT: 'HIT',
   KNOCKDOWN: 'KNOCKDOWN',
   VICTORY: 'VICTORY',
   DEFEAT: 'DEFEAT'
+};
+
+// Configurable Difficulty System
+export const DIFFICULTY_LEVELS = {
+  EASY: {
+    id: 'EASY',
+    name: 'Fácil',
+    label: 'Estagiário',
+    timerMin: 0.65,
+    timerRange: 0.35,
+    blockChance: 0.10,
+    hesitateChance: 0.45,
+    superChance: 0.15,
+    specialChance: 0.15
+  },
+  NORMAL: {
+    id: 'NORMAL',
+    name: 'Médio',
+    label: 'Deputado Titular',
+    timerMin: 0.45,
+    timerRange: 0.25,
+    blockChance: 0.25,
+    hesitateChance: 0.25,
+    superChance: 0.35,
+    specialChance: 0.25
+  },
+  HARD: {
+    id: 'HARD',
+    name: 'Difícil',
+    label: 'Líder de Bancada',
+    timerMin: 0.25,
+    timerRange: 0.15,
+    blockChance: 0.45,
+    hesitateChance: 0.10,
+    superChance: 0.55,
+    specialChance: 0.40
+  },
+  EXTREME: {
+    id: 'EXTREME',
+    name: 'Extremo',
+    label: 'Presidente do Senado',
+    timerMin: 0.12,
+    timerRange: 0.10,
+    blockChance: 0.65,
+    hesitateChance: 0.02,
+    superChance: 0.85,
+    specialChance: 0.55
+  }
 };
 
 export class Fighter {
@@ -31,7 +82,8 @@ export class Fighter {
     groundY,
     facing = 1,
     isCpu = false,
-    playerNum = 1
+    playerNum = 1,
+    difficulty = 'NORMAL'
   }) {
     this.charData = charData;
     this.x = x;
@@ -40,6 +92,8 @@ export class Fighter {
     this.facing = facing; // 1 = right, -1 = left
     this.isCpu = isCpu;
     this.playerNum = playerNum;
+    this.difficultyKey = difficulty;
+    this.difficulty = DIFFICULTY_LEVELS[difficulty] || DIFFICULTY_LEVELS.NORMAL;
 
     // Movement & Physics
     this.vx = 0;
@@ -307,19 +361,19 @@ export class Fighter {
       return;
     }
 
-    // Normal Attacks
+    // Normal Attacks with clean, visible frame timing
     if (inpt.punchLight) {
-      this.startAttack(FIGHTER_STATE.PUNCH_LIGHT, 0.22);
+      this.startAttack(FIGHTER_STATE.PUNCH_LIGHT, 0.26);
       arcadeAudio.punchLight();
       return;
     }
     if (inpt.punchHeavy) {
-      this.startAttack(FIGHTER_STATE.PUNCH_HEAVY, 0.38);
+      this.startAttack(FIGHTER_STATE.PUNCH_HEAVY, 0.40);
       arcadeAudio.punchHeavy();
       return;
     }
     if (inpt.kick) {
-      this.startAttack(FIGHTER_STATE.KICK, 0.4);
+      this.startAttack(FIGHTER_STATE.KICK, 0.42);
       arcadeAudio.kick();
       return;
     }
@@ -518,7 +572,7 @@ export class Fighter {
     }
   }
 
-  // AI Logic for CPU opponent
+  // AI Logic for CPU opponent with dynamic difficulty
   updateAI(dt, arenaWidth, projectilesList) {
     if (!this.opponent || this.opponent.isDead) {
       this.state = FIGHTER_STATE.IDLE;
@@ -531,39 +585,39 @@ export class Fighter {
     const inMidRange = dist >= 120 && dist < 280;
     const oppIsAttacking = this.opponent.isAttacking;
 
-    // Balanced AI difficulty with human-like reaction times
-    if (this.aiTimer <= 0) {
-      // Decision interval increased to 0.55s - 0.85s (gives player time to attack and combo)
-      this.aiTimer = 0.55 + Math.random() * 0.3;
+    const diff = this.difficulty || DIFFICULTY_LEVELS.NORMAL;
 
-      // 1. Super: Only occasional and telegraphed (25% chance when full)
-      if (this.superMeter >= 100 && dist < 220 && Math.random() < 0.25) {
+    if (this.aiTimer <= 0) {
+      this.aiTimer = diff.timerMin + Math.random() * diff.timerRange;
+
+      // 1. Super attack
+      if (this.superMeter >= 100 && dist < 220 && Math.random() < diff.superChance) {
         this.useSuper();
         return;
       }
 
-      // 2. Defense: Only 22% chance to block (78% of player attacks land!)
-      if (oppIsAttacking && inMeleeRange && Math.random() < 0.22) {
+      // 2. Defense: Chance to guard/block incoming attacks
+      if (oppIsAttacking && inMeleeRange && Math.random() < diff.blockChance) {
         this.vx = -this.facing * this.walkSpeed;
         this.state = FIGHTER_STATE.WALK_BACK;
         return;
       }
 
-      // 3. Melee Combat with hesitation openings for player
+      // 3. Melee Combat with hesitation openings based on difficulty
       if (inMeleeRange) {
         const roll = Math.random();
-        if (roll < 0.35) {
+        if (roll < diff.hesitateChance) {
           // Hesitation / breathing room pause
           this.state = FIGHTER_STATE.IDLE;
           this.vx = 0;
-        } else if (roll < 0.60) {
-          this.startAttack(FIGHTER_STATE.PUNCH_LIGHT, 0.22);
+        } else if (roll < diff.hesitateChance + 0.30) {
+          this.startAttack(FIGHTER_STATE.PUNCH_LIGHT, 0.26);
           arcadeAudio.punchLight();
-        } else if (roll < 0.80) {
-          this.startAttack(FIGHTER_STATE.PUNCH_HEAVY, 0.38);
+        } else if (roll < diff.hesitateChance + 0.55) {
+          this.startAttack(FIGHTER_STATE.PUNCH_HEAVY, 0.40);
           arcadeAudio.punchHeavy();
-        } else if (roll < 0.92) {
-          this.startAttack(FIGHTER_STATE.KICK, 0.4);
+        } else if (roll < diff.hesitateChance + 0.75) {
+          this.startAttack(FIGHTER_STATE.KICK, 0.42);
           arcadeAudio.kick();
         } else {
           this.startAttack(FIGHTER_STATE.LOW_KICK, 0.35);
@@ -572,13 +626,13 @@ export class Fighter {
         return;
       }
 
-      // 4. Mid range: occasional projectile or jump
+      // 4. Mid range: projectile or jump
       if (inMidRange) {
         const roll = Math.random();
-        if (roll < 0.20 && this.attackCooldown <= 0) {
+        if (roll < diff.specialChance && this.attackCooldown <= 0) {
           this.useSpecial(projectilesList);
           return;
-        } else if (roll < 0.45 && this.isGrounded) {
+        } else if (roll < diff.specialChance + 0.25 && this.isGrounded) {
           // Jump approach
           this.isGrounded = false;
           this.vy = this.jumpForce;
@@ -587,19 +641,22 @@ export class Fighter {
           arcadeAudio.swoosh();
           setTimeout(() => {
             if (!this.isGrounded && !this.isDead) {
-              this.startAttack(FIGHTER_STATE.JUMP_ATTACK, 0.4);
+              this.startAttack(FIGHTER_STATE.JUMP_ATTACK, 0.40);
             }
           }, 250);
           return;
         }
       }
 
-      // 5. Long range: gentle approach with rare projectile
+      // 5. Long range: approach or projectile
       if (dist >= 220) {
-        if (Math.random() < 0.25 && this.attackCooldown <= 0) {
+        if (Math.random() < diff.specialChance && this.attackCooldown <= 0) {
           this.useSpecial(projectilesList);
           return;
         }
+        this.vx = this.facing * this.walkSpeed * 0.75;
+        this.state = FIGHTER_STATE.WALK_FWD;
+        return;
       }
     }
 
@@ -977,6 +1034,8 @@ export class Fighter {
         col = 0;
         row = 0;
         break;
+      case FIGHTER_STATE.PUNCH_LIGHT:
+      case FIGHTER_STATE.PUNCH_HEAVY:
       case FIGHTER_STATE.PUNCH:
       case FIGHTER_STATE.HEAVY_PUNCH:
       case FIGHTER_STATE.SPECIAL:
@@ -990,6 +1049,7 @@ export class Fighter {
         col = 0;
         row = 1;
         break;
+      case FIGHTER_STATE.HIT:
       case FIGHTER_STATE.HURT:
       case FIGHTER_STATE.KNOCKDOWN:
         col = 1;
@@ -1015,8 +1075,14 @@ export class Fighter {
     const isCrouching = (this.state === FIGHTER_STATE.CROUCH || this.state === FIGHTER_STATE.LOW_KICK);
     const crouchOffset = isCrouching ? 28 : 0;
 
-    // Attack slight forward push
-    const attackShiftX = (this.state === FIGHTER_STATE.PUNCH || this.state === FIGHTER_STATE.HEAVY_PUNCH) ? 12 : 0;
+    // Attack slight forward push for punches and specials
+    const isPunchAttack = (
+      this.state === FIGHTER_STATE.PUNCH_LIGHT ||
+      this.state === FIGHTER_STATE.PUNCH_HEAVY ||
+      this.state === FIGHTER_STATE.SPECIAL ||
+      this.state === FIGHTER_STATE.SUPER
+    );
+    const attackShiftX = isPunchAttack ? 14 : 0;
 
     const targetH = 205;
     const targetW = targetH * (sw / sh);

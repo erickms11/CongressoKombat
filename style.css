@@ -360,6 +360,123 @@ body {
   max-width: 650px;
 }
 
+/* Settings Modal Specifics */
+.settings-box {
+  max-width: 680px;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-label {
+  font-weight: 800;
+  font-size: 13px;
+  color: #ffd32a;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.difficulty-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .difficulty-options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.diff-btn {
+  background: #0f1624;
+  border: 2px solid #27364f;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #e2e8f0;
+}
+
+.diff-btn:hover {
+  background: #172238;
+  border-color: #4a638b;
+  transform: translateY(-2px);
+}
+
+.diff-btn.active {
+  background: rgba(255, 211, 42, 0.12);
+  border-color: #ffd32a;
+  box-shadow: 0 0 16px rgba(255, 211, 42, 0.35);
+  transform: scale(1.02);
+}
+
+.diff-badge {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.diff-badge.green { color: #2ecc71; background: rgba(46, 204, 113, 0.15); }
+.diff-badge.yellow { color: #f1c40f; background: rgba(241, 196, 15, 0.15); }
+.diff-badge.red { color: #e74c3c; background: rgba(231, 76, 60, 0.15); }
+.diff-badge.purple { color: #9b59b6; background: rgba(155, 89, 182, 0.15); }
+
+.diff-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.diff-desc {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #94a3b8;
+}
+
+.settings-btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.time-btn {
+  flex: 1;
+  background: #0f1624;
+  border: 2px solid #27364f;
+  color: #94a3b8;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.time-btn:hover {
+  background: #172238;
+  color: #fff;
+  border-color: #4a638b;
+}
+
+.time-btn.active {
+  background: rgba(52, 152, 219, 0.2);
+  border-color: #3498db;
+  color: #3498db;
+  box-shadow: 0 0 12px rgba(52, 152, 219, 0.35);
+}
+
 .online-section {
   background: #0d131f;
   border: 1px solid #243048;

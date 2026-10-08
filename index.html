@@ -28,6 +28,9 @@
       <button id="btn-audio" class="arcade-btn" title="Ligar/Desligar Áudio e BGM">
         🔊 Áudio: <span id="audio-status">Ligado</span>
       </button>
+      <button id="btn-settings" class="arcade-btn" title="Configurações e Dificuldade">
+        ⚙️ Opções
+      </button>
       <button id="btn-touch" class="arcade-btn" title="Ligar/Desligar Controles Virtuais Touch">
         📱 Touch: <span id="touch-status">Auto</span>
       </button>
@@ -190,6 +193,60 @@
     </div>
   </div>
 
+  <!-- Settings Modal (Configurações & Dificuldade) -->
+  <div id="modal-settings" class="modal-overlay">
+    <div class="modal-box settings-box">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ CONFIGURAÇÕES DO JOGO</h3>
+        <button id="settings-modal-close" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Dificuldade da CPU -->
+        <div class="settings-group">
+          <label class="settings-label">🥊 NÍVEL DE DIFICULDADE DA CPU (IA):</label>
+          <div class="difficulty-options-grid">
+            <button type="button" class="diff-btn" data-diff="EASY">
+              <span class="diff-badge green">🟢 FÁCIL</span>
+              <strong class="diff-title">Estagiário</strong>
+              <small class="diff-desc">IA tranquila, ataques esparsos e raramente bloqueia. Ideal para treinar combos!</small>
+            </button>
+            <button type="button" class="diff-btn active" data-diff="NORMAL">
+              <span class="diff-badge yellow">🟡 MÉDIO</span>
+              <strong class="diff-title">Deputado Titular</strong>
+              <small class="diff-desc">Partida clássica equilibrada de fliperama, bloqueios pontuais e boa agressividade.</small>
+            </button>
+            <button type="button" class="diff-btn" data-diff="HARD">
+              <span class="diff-badge red">🔴 DIFÍCIL</span>
+              <strong class="diff-title">Líder de Bancada</strong>
+              <small class="diff-desc">Reações rápidas, bloqueia golpes óbvios e pune erros com projéteis e especiais.</small>
+            </button>
+            <button type="button" class="diff-btn" data-diff="EXTREME">
+              <span class="diff-badge purple">🟣 EXTREMO</span>
+              <strong class="diff-title">Presidente do Senado</strong>
+              <small class="diff-desc">Defesa de ferro, punições imediatas e super ataques brutais. Desafio hardcore!</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tempo de Round -->
+        <div class="settings-group" style="margin-top: 18px;">
+          <label class="settings-label">⏱️ TEMPO POR ROUND:</label>
+          <div class="settings-btn-row">
+            <button type="button" class="time-btn" data-time="60">60 Segundos</button>
+            <button type="button" class="time-btn active" data-time="99">99 Segundos (Padrão)</button>
+            <button type="button" class="time-btn" data-time="999">Sem Tempo (Infinito)</button>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; text-align: center;">
+          <button id="btn-save-settings" class="arcade-btn green-btn" style="width: 100%; justify-content: center; padding: 12px; font-size: 15px;">
+            ✓ Confirmar & Salvar Configurações
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- PeerJS Library -->
   <script src="./peerjs.min.js"></script>
 
@@ -283,6 +340,60 @@
     modalClose.addEventListener('click', () => modalHowto.classList.remove('active'));
     modalHowto.addEventListener('click', (e) => {
       if (e.target === modalHowto) modalHowto.classList.remove('active');
+    });
+
+    // Settings Modal (Configurações e Dificuldade)
+    const btnSettings = document.getElementById('btn-settings');
+    const modalSettings = document.getElementById('modal-settings');
+    const settingsClose = document.getElementById('settings-modal-close');
+    const btnSaveSettings = document.getElementById('btn-save-settings');
+
+    const openSettings = () => {
+      // Sync UI with current saved values
+      const currentDiff = localStorage.getItem('ck_difficulty') || 'NORMAL';
+      document.querySelectorAll('.diff-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-diff') === currentDiff);
+      });
+
+      const currentTime = localStorage.getItem('ck_round_time') || '99';
+      document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-time') === currentTime);
+      });
+
+      if (modalSettings) modalSettings.classList.add('active');
+    };
+
+    const closeSettings = () => {
+      if (modalSettings) modalSettings.classList.remove('active');
+    };
+
+    if (btnSettings) btnSettings.addEventListener('click', openSettings);
+    if (settingsClose) settingsClose.addEventListener('click', closeSettings);
+    if (btnSaveSettings) btnSaveSettings.addEventListener('click', closeSettings);
+    if (modalSettings) {
+      modalSettings.addEventListener('click', (e) => {
+        if (e.target === modalSettings) closeSettings();
+      });
+    }
+
+    // Difficulty Option Buttons
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const diff = btn.getAttribute('data-diff');
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (window.setGameDifficulty) window.setGameDifficulty(diff);
+      });
+    });
+
+    // Round Time Option Buttons
+    document.querySelectorAll('.time-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const timeVal = parseInt(btn.getAttribute('data-time'));
+        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (window.setGameRoundTime) window.setGameRoundTime(timeVal);
+      });
     });
 
     // Virtual Buttons Helper

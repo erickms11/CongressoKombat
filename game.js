@@ -12,7 +12,7 @@ import {
 } from './littlejs.esm.js';
 
 import { CHARACTERS, SIDES, getCharacterById } from './characters.js';
-import { Fighter, FIGHTER_STATE } from './fighter.js';
+import { Fighter, FIGHTER_STATE, DIFFICULTY_LEVELS } from './fighter.js';
 import { Projectile } from './projectile.js';
 import { particleSystem } from './particles.js';
 import { arcadeAudio } from './audio.js';
@@ -28,6 +28,28 @@ const SCREEN = {
   VERSUS: 'VERSUS',
   FIGHT: 'FIGHT',
   MATCH_OVER: 'MATCH_OVER'
+};
+
+// Configurable Game Settings
+export const GAME_SETTINGS = {
+  difficulty: localStorage.getItem('ck_difficulty') || 'NORMAL',
+  roundTime: parseInt(localStorage.getItem('ck_round_time') || '99')
+};
+window.gameSettings = GAME_SETTINGS;
+
+window.setGameDifficulty = function(diff) {
+  if (DIFFICULTY_LEVELS[diff]) {
+    GAME_SETTINGS.difficulty = diff;
+    localStorage.setItem('ck_difficulty', diff);
+    if (player2 && player2.isCpu) {
+      player2.difficulty = DIFFICULTY_LEVELS[diff];
+    }
+  }
+};
+
+window.setGameRoundTime = function(t) {
+  GAME_SETTINGS.roundTime = t;
+  localStorage.setItem('ck_round_time', t.toString());
 };
 
 // Canvas Resolution (16:9 1280x720)
@@ -404,13 +426,18 @@ function gameInit() {
 
       if (currentScreen === SCREEN.MODE_SELECT) {
         MODES.forEach((m, i) => {
-          const y = 190 + i * 140;
-          if (tapX >= CANVAS_WIDTH / 2 - 380 && tapX <= CANVAS_WIDTH / 2 + 380 && tapY >= y && tapY <= y + 110) {
+          const y = 135 + i * 102;
+          if (tapX >= CANVAS_WIDTH / 2 - 380 && tapX <= CANVAS_WIDTH / 2 + 380 && tapY >= y && tapY <= y + 90) {
             modeIndex = i;
             const selected = MODES[modeIndex].id;
             arcadeAudio.menuConfirm();
             if (selected === 'ONLINE') {
               const modal = document.getElementById('modal-online');
+              if (modal) modal.classList.add('active');
+              return;
+            }
+            if (selected === 'SETTINGS') {
+              const modal = document.getElementById('modal-settings');
               if (modal) modal.classList.add('active');
               return;
             }
@@ -543,7 +570,8 @@ const MODES = [
   { id: '1P', name: '1P vs CPU (Modo Arcade)', desc: 'Escolha seu político e enfrente a oposição com dificuldade balanceada!' },
   { id: '2P', name: '2 Jogadores (Versus Local)', desc: 'Dois jogadores no mesmo teclado ou controles de Xbox!' },
   { id: 'ONLINE', name: 'Versus Online (PeerJS WebRTC)', desc: 'Dispute contra outro jogador online via código de sala P2P sem lag!' },
-  { id: 'TRAIN', name: 'Modo Treino (Prática)', desc: 'Treine socos, rasteiras, projéteis e especiais à vontade.' }
+  { id: 'TRAIN', name: 'Modo Treino (Prática)', desc: 'Treine socos, rasteiras, projéteis e especiais à vontade.' },
+  { id: 'SETTINGS', name: '⚙️ Configurações & Dificuldade', desc: 'Ajuste a dificuldade da IA da CPU, tempo de round e controles.' }
 ];
 
 function updateModeSelect() {
@@ -562,6 +590,13 @@ function updateModeSelect() {
     if (selected === 'ONLINE') {
       // Open Online Lobby Modal
       const modal = document.getElementById('modal-online');
+      if (modal) modal.classList.add('active');
+      return;
+    }
+
+    if (selected === 'SETTINGS') {
+      // Open Settings Modal
+      const modal = document.getElementById('modal-settings');
       if (modal) modal.classList.add('active');
       return;
     }
@@ -745,7 +780,8 @@ function startNewMatch() {
     groundY: ARENA_GROUND_Y,
     facing: -1,
     isCpu: (gameMode === '1P' || gameMode === 'TRAIN'),
-    playerNum: 2
+    playerNum: 2,
+    difficulty: (gameMode === 'TRAIN') ? 'EASY' : (GAME_SETTINGS.difficulty || 'NORMAL')
   });
 
   player1.setOpponent(player2);
@@ -761,7 +797,7 @@ function startNewMatch() {
 function startRound() {
   roundState = 'INTRO';
   roundStateTimer = 0;
-  matchTimer = 99;
+  matchTimer = GAME_SETTINGS.roundTime || 99;
   matchTimerAccum = 0;
   projectiles = [];
   particleSystem.clear();
@@ -979,15 +1015,15 @@ function renderModeSelect(ctx) {
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   ctx.fillStyle = '#1e293b';
-  ctx.fillRect(0, 0, CANVAS_WIDTH, 110);
+  ctx.fillRect(0, 0, CANVAS_WIDTH, 100);
   ctx.fillStyle = '#ffd32a';
-  ctx.font = 'bold 36px "Segoe UI", Roboto, sans-serif';
+  ctx.font = 'bold 34px "Segoe UI", Roboto, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('SELECIONE O MODO DE JOGO', CANVAS_WIDTH / 2, 65);
+  ctx.fillText('SELECIONE O MODO DE JOGO', CANVAS_WIDTH / 2, 60);
 
   MODES.forEach((m, i) => {
     const isSelected = i === modeIndex;
-    const y = 190 + i * 140;
+    const y = 130 + i * 104;
 
     ctx.save();
     if (isSelected) {
@@ -995,7 +1031,7 @@ function renderModeSelect(ctx) {
       ctx.strokeStyle = '#ffd32a';
       ctx.lineWidth = 4;
       ctx.shadowColor = '#ffd32a';
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 18;
     } else {
       ctx.fillStyle = 'rgba(30, 41, 59, 0.6)';
       ctx.strokeStyle = '#334155';
@@ -1003,25 +1039,31 @@ function renderModeSelect(ctx) {
     }
 
     ctx.beginPath();
-    ctx.roundRect(CANVAS_WIDTH / 2 - 380, y, 760, 110, 12);
+    ctx.roundRect(CANVAS_WIDTH / 2 - 380, y, 760, 92, 10);
     ctx.fill();
     ctx.stroke();
 
+    let titleText = (isSelected ? '▶ ' : '   ') + m.name;
+    if (m.id === 'SETTINGS') {
+      const curDiffName = DIFFICULTY_LEVELS[GAME_SETTINGS.difficulty]?.name || 'Médio';
+      titleText += ` [${curDiffName}]`;
+    }
+
     ctx.fillStyle = isSelected ? '#ffd32a' : '#ffffff';
-    ctx.font = 'bold 26px "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 24px "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText((isSelected ? '▶ ' : '   ') + m.name, CANVAS_WIDTH / 2 - 350, y + 45);
+    ctx.fillText(titleText, CANVAS_WIDTH / 2 - 350, y + 40);
 
     ctx.fillStyle = isSelected ? '#e2e8f0' : '#94a3b8';
-    ctx.font = '18px "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(m.desc, CANVAS_WIDTH / 2 - 315, y + 80);
+    ctx.font = '16px "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(m.desc, CANVAS_WIDTH / 2 - 315, y + 70);
     ctx.restore();
   });
 
   ctx.fillStyle = '#94a3b8';
-  ctx.font = '16px monospace';
+  ctx.font = '15px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('[W/S] ou D-PAD NAVEGAR • [ENTER/J] ou BOTÃO [A] CONFIRMAR', CANVAS_WIDTH / 2, 670);
+  ctx.fillText('[W/S] ou D-PAD NAVEGAR • [ENTER/J] ou BOTÃO [A] CONFIRMAR', CANVAS_WIDTH / 2, 680);
 }
 
 function renderCharSelect(ctx) {
