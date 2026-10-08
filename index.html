@@ -247,6 +247,22 @@
     </div>
   </div>
 
+  <!-- Mobile Portrait Overlay: asks to rotate to landscape and highlights PWA install -->
+  <div id="rotate-overlay" class="rotate-overlay" role="dialog" aria-modal="true" aria-labelledby="rotate-title" aria-describedby="rotate-text">
+    <div id="rotate-box" class="rotate-overlay-box" tabindex="-1">
+      <div class="rotate-icon" aria-hidden="true">📱</div>
+      <h2 id="rotate-title" class="rotate-title">Gire o celular</h2>
+      <p id="rotate-text" class="rotate-text">O Congresso Kombat é jogado na horizontal. Gire seu aparelho para o modo paisagem para começar a lutar.</p>
+
+      <div id="rotate-install-section" class="rotate-install">
+        <div class="rotate-install-title">Instale o app</div>
+        <button id="rotate-install-btn" class="arcade-btn green-btn rotate-install-btn" type="button" hidden>⬇ Instalar App</button>
+        <p id="rotate-install-ios" class="rotate-install-hint" hidden>Toque em <strong>Compartilhar</strong> e depois em <strong>Adicionar à Tela de Início</strong>.</p>
+        <p id="rotate-install-other" class="rotate-install-hint" hidden>Abra o <strong>menu do navegador</strong> e toque em <strong>Instalar app</strong>.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- PeerJS Library -->
   <script src="./peerjs.min.js"></script>
 
@@ -302,26 +318,77 @@
       }
     });
 
-    // PWA Install Prompt Handler
+    // PWA Install Prompt Handler (header button + portrait overlay CTA share the same prompt)
     let deferredPrompt = null;
     const btnPwaInstall = document.getElementById('btn-pwa-install');
+    const rotateInstallSection = document.getElementById('rotate-install-section');
+    const btnRotateInstall = document.getElementById('rotate-install-btn');
+    const rotateInstallIos = document.getElementById('rotate-install-ios');
+    const rotateInstallOther = document.getElementById('rotate-install-other');
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+    const syncInstallUI = () => {
+      const hasPrompt = !!deferredPrompt;
+      if (btnPwaInstall) btnPwaInstall.style.display = hasPrompt ? 'flex' : 'none';
+      if (btnRotateInstall) btnRotateInstall.hidden = !hasPrompt;
+      if (rotateInstallIos) rotateInstallIos.hidden = hasPrompt || !isIos;
+      if (rotateInstallOther) rotateInstallOther.hidden = hasPrompt || isIos;
+      if (rotateInstallSection) rotateInstallSection.hidden = isStandalone;
+    };
+
+    const triggerInstall = async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice.catch(() => {});
+      deferredPrompt = null;
+      syncInstallUI();
+    };
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      if (btnPwaInstall) btnPwaInstall.style.display = 'flex';
+      syncInstallUI();
+    });
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      syncInstallUI();
+    });
+    if (btnPwaInstall) btnPwaInstall.addEventListener('click', triggerInstall);
+    if (btnRotateInstall) btnRotateInstall.addEventListener('click', triggerInstall);
+    syncInstallUI();
+
+    // Mobile portrait lock: block the game until the device is rotated to landscape.
+    // Visual block via #rotate-overlay (CSS); interactive block via inert + keyboard capture here.
+    // No screen.orientation.lock() is used: the user rotates the device manually.
+    const portraitBlockMql = window.matchMedia('(orientation: portrait) and (max-width: 900px) and (pointer: coarse)');
+    const rotateOverlay = document.getElementById('rotate-overlay');
+    const rotateBox = document.getElementById('rotate-box');
+    const lockedRegions = Array.from(document.body.children).filter(
+      (el) => el !== rotateOverlay && el.tagName !== 'SCRIPT'
+    );
+
+    const applyPortraitBlock = () => {
+      const blocked = portraitBlockMql.matches;
+      lockedRegions.forEach((el) => { el.inert = blocked; });
+      if (blocked) {
+        syncInstallUI();
+        rotateBox.focus({ preventScroll: true });
+      }
+    };
+
+    ['keydown', 'keyup'].forEach((type) => {
+      window.addEventListener(type, (e) => {
+        if (portraitBlockMql.matches) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
     });
 
-    if (btnPwaInstall) {
-      btnPwaInstall.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          btnPwaInstall.style.display = 'none';
-        }
-        deferredPrompt = null;
-      });
-    }
+    portraitBlockMql.addEventListener('change', applyPortraitBlock);
+    applyPortraitBlock();
 
     // Register Service Worker for Offline PWA
     if ('serviceWorker' in navigator) {

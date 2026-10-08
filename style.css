@@ -888,3 +888,104 @@ body {
 }
 
 
+
+/* ==========================================================================
+   MOBILE PORTRAIT ROTATION OVERLAY (landscape required + PWA install CTA)
+   ========================================================================== */
+
+.rotate-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(7, 9, 14, 0.96);
+  color: var(--text-main);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  overflow-y: auto;
+  touch-action: none;
+}
+
+@media (orientation: portrait) and (max-width: 900px) and (pointer: coarse) {
+  .rotate-overlay {
+    display: flex;
+  }
+}
+
+.rotate-overlay-box {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.rotate-icon {
+  font-size: 56px;
+  line-height: 1;
+  animation: rotate-hint 2.4s ease-in-out infinite;
+}
+
+@keyframes rotate-hint {
+  0%, 15% { transform: rotate(0deg); }
+  50%, 70% { transform: rotate(-90deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rotate-icon {
+    animation: none;
+  }
+}
+
+.rotate-title {
+  font-family: 'Impact', sans-serif;
+  font-size: 26px;
+  letter-spacing: 1px;
+  color: var(--accent-gold);
+}
+
+.rotate-text {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.rotate-install {
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 2px solid rgba(255, 211, 42, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.rotate-install-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--accent-green);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.rotate-install-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  font-size: 15px;
+}
+
+.rotate-install-hint {
+  font-size: 14px;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.rotate-overlay [hidden] {
+  display: none !important;
+}
