@@ -1,6 +1,13 @@
 # 🏛 Congresso Kombat: Luta pelo Poder
 
+> ### 🕹️ **JOGUE AGORA ONLINE NO SEU NAVEGADOR (PC & MOBILE):**
+> ### 👉 **[https://erickms11.github.io/CongressoKombat/](https://erickms11.github.io/CongressoKombat/)**
+
+---
+
 Um jogo de luta 2D no estilo clássico dos fliperamas dos anos 90 (*Street Fighter II / III*), desenvolvido com a engine **LittleJS**, estrelando **10 políticos brasileiros** divididos por espectro político em disputas épicas no Plenário da Câmara!
+
+O jogo roda **100% no navegador**, sem necessidade de instalação ou downloads. Basta acessar o link do **GitHub Pages** acima no computador, celular ou tablet.
 
 ---
 
@@ -42,9 +49,41 @@ Um jogo de luta 2D no estilo clássico dos fliperamas dos anos 90 (*Street Fight
 
 ---
 
+## ⚙️ Menu de Opções & Níveis de Dificuldade
+
+Acesse a qualquer momento pelo botão **`⚙️ Opções`** no topo da tela ou pela 5ª opção no menu de modos do jogo:
+
+| Dificuldade | Patente | Comportamento da IA |
+| :--- | :--- | :--- |
+| 🟢 **Fácil** | *Estagiário* | IA calma, ataques lentos e raramente bloqueia. Excelente para treinar! |
+| 🟡 **Médio** *(Padrão)* | *Deputado Titular* | Desafio equilibrado de fliperama: bloqueios pontuais e boa agressividade. |
+| 🔴 **Difícil** | *Líder de Bancada* | Reações rápidas, bloqueia ataques óbvios e pune erros com magias e combos. |
+| 🟣 **Extremo** | *Presidente do Senado* | Desafio hardcore: reação instantânea, defesa de ferro e super ataques brutais. |
+
+Também é possível ajustar o **Tempo de Round (60s, 99s ou Infinito)** e salvar preferências no navegador.
+
+---
+
 ## 🎮 Controles
 
-### 🟢 Controle de Xbox (Suporte Plug & Play):
+### 📱 Controles Touch para Mobile (Celulares & Tablets):
+| Ação | Botão Touch na Tela |
+| :--- | :--- |
+| **Mover / Andar** | `D-Pad ◀ / ▶` |
+| **Pular** | `D-Pad ▲` |
+| **Agachar / Bloquear** | `D-Pad ▼` |
+| **Soco Rápido** | Botão `LP` (Verde) |
+| **Soco Forte** | Botão `HP` (Azul) |
+| **Chute** | Botão `LK` (Laranja) |
+| **Golpe Especial** | Botão `SP` (Amarelo) |
+| **Super CPI (100%)** | Botão `SUPER` (Vermelho) |
+| **Pausa / Menu** | Botão `⏸ PAUSE` ou `⮌ BACK` (Topo direito) |
+
+*Dica no Celular:* Você também pode **tocar diretamente nas cartas dos políticos** na tela de seleção para escolhê-los!
+
+---
+
+### 🟢 Controle de Xbox (Suporte Plug & Play via USB/Bluetooth):
 | Ação | Botão no Controle Xbox |
 | :--- | :--- |
 | **Mover / Andar** | `D-Pad` ou `Analógico Esquerdo (Stick)` |
@@ -77,42 +116,19 @@ Um jogo de luta 2D no estilo clássico dos fliperamas dos anos 90 (*Street Fight
 - **Especial & Super:** `0` (Numpad) ou `O` / `Enter` (Numpad) ou `P`
 
 ---
----
 
-### 📱 Controles Touch para Mobile (Overlay Virtual):
-| Ação | Botão Touch na Tela |
-| :--- | :--- |
-| **Mover / Andar** | `D-Pad ◀ / ▶` |
-| **Pular** | `D-Pad ▲` |
-| **Agachar / Bloquear** | `D-Pad ▼` |
-| **Soco Rápido** | Botão `LP` (Verde) |
-| **Soco Forte** | Botão `HP` (Azul) |
-| **Chute** | Botão `LK` (Laranja) |
-| **Golpe Especial** | Botão `SP` (Amarelo) |
-| **Super CPI (100%)** | Botão `SUPER` (Vermelho) |
-| **Pausa / Menu** | Botão `⏸ PAUSE` ou `⮌ BACK` (Topo direito) |
+## 📲 Suporte a PWA (Instalar no Celular ou PC)
 
-*Dica:* Em telas sensíveis ao toque, você também pode **tocar diretamente nas cartas dos candidatos** para selecioná-los e confirmá-los!
+O jogo funciona como um **Progressive Web App**:
+- **Android (Chrome):** Toque no botão **⬇ Instalar App** ou nas opções do navegador para fixar na tela inicial com ícone próprio.
+- **iOS (Safari):** Toque em *Compartilhar* ➔ *Adicionar à Tela de Início*.
+- **Offline:** Permite jogar mesmo sem internet graças ao Service Worker integrado.
 
 ---
 
-## 📲 Suporte a PWA (Progressive Web App)
+## 🌐 Como Acessar
 
-O jogo funciona como um **PWA completo**:
-- **Instalável:** No Android (Chrome), iOS (Safari - *Adicionar à Tela de Início*) ou Desktop, clique em **⬇ Instalar App** ou no menu do navegador para instalar como aplicativo nativo independente.
-- **Orientação Paisagem Automática:** Roda em tela cheia na horizontal para máxima ergonomia de fliperama.
-- **Offline Ready:** Utiliza Service Worker para cachear assets, código e áudio, permitindo abrir e jogar mesmo sem internet.
+Qualquer pessoa pode jogar instantaneamente pelo link público do **GitHub Pages**:
+👉 **[https://erickms11.github.io/CongressoKombat/](https://erickms11.github.io/CongressoKombat/)**
 
----
-
-## 🚀 Como Executar
-
-O servidor local já está configurado. Para rodar a qualquer momento:
-
-```bash
-npm start
-```
-
-Abra no navegador em:
-👉 **`http://localhost:3000`**
-
+*(Para desenvolvedores que desejam rodar o projeto localmente: `npm start` e acesse `http://localhost:3000`)*
