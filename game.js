@@ -114,15 +114,34 @@ function preloadImage(key, src, chromaKey = null) {
         const imgData = ctx.getImageData(0, 0, c.width, c.height);
         const d = imgData.data;
         const [kr, kg, kb] = chromaKey;
+        const w = c.width;
+        const h = c.height;
+
         for (let i = 0; i < d.length; i += 4) {
-          const dr = d[i] - kr;
-          const dg = d[i + 1] - kg;
-          const db = d[i + 2] - kb;
-          // Magenta distance threshold
-          if (dr * dr + dg * dg + db * db < 7800) {
+          const r = d[i];
+          const g = d[i + 1];
+          const b = d[i + 2];
+          const dr = r - kr;
+          const dg = g - kg;
+          const db = b - kb;
+          const distSq = dr * dr + dg * dg + db * db;
+
+          // Generous magenta threshold to cleanly remove JPEG compression artifacts
+          if (distSq < 11500) {
             d[i + 3] = 0; // Transparent
           }
         }
+
+        // Clear outer 2px perimeter of sheet to prevent any border artifact
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            if (x < 2 || x >= w - 2 || y < 2 || y >= h - 2) {
+              const idx = (y * w + x) * 4;
+              d[idx + 3] = 0;
+            }
+          }
+        }
+
         ctx.putImageData(imgData, 0, 0);
         spriteCanvases[key] = c;
         console.log(`[Spritesheet] Pronto com chroma-key: ${key} (${img.width}x${img.height})`);

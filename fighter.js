@@ -693,15 +693,18 @@ export class Fighter {
       return;
     }
 
-    // Super Aura glow if meter >= 100 or during super
+    // Super Aura glow if meter >= 100 or during super (Organic energy aura, no square hitbox wireframe)
     if (this.superMeter >= 100 || this.state === FIGHTER_STATE.SUPER) {
       ctx.save();
-      ctx.shadowColor = colors.aura;
-      ctx.shadowBlur = 25;
-      ctx.strokeStyle = colors.aura;
-      ctx.lineWidth = 3;
-      const pulse = Math.sin(this.animFrame * 2) * 5;
-      ctx.strokeRect(-28 - pulse, -125 - pulse, 56 + pulse * 2, 125 + pulse);
+      const pulse = 1 + Math.sin(this.animFrame * 3) * 0.18;
+      const grad = ctx.createRadialGradient(0, 0, 8, 0, 0, 52 * pulse);
+      grad.addColorStop(0, colors.aura || '#ffd32a');
+      grad.addColorStop(0.5, (colors.aura || '#ffd32a') + '88');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 52 * pulse, 16 * pulse, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
 
@@ -1100,6 +1103,13 @@ export class Fighter {
       ctx.restore();
     }
 
-    ctx.drawImage(spriteSheet, sx, sy, sw, sh, targetX, targetY, targetW, targetH);
+    // Clean cell sampling with 2px safe inset to prevent border bleed
+    const pad = 2;
+    const srcX = sx + pad;
+    const srcY = sy + pad;
+    const srcW = Math.max(1, sw - pad * 2);
+    const srcH = Math.max(1, sh - pad * 2);
+
+    ctx.drawImage(spriteSheet, srcX, srcY, srcW, srcH, targetX, targetY, targetW, targetH);
   }
 }
