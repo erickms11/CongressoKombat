@@ -1,0 +1,12 @@
+{
+  "name": "congresso-kombat",
+  "version": "1.0.0",
+  "description": "Jogo de luta estilo Street Fighter com sátira política brasileira usando LittleJS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "author": "",
+  "license": "MIT"
+}

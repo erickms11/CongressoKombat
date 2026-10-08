@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Congresso Kombat: Luta pelo Poder (10 Personagens & Controle Xbox)</title>
+  <meta name="description" content="Jogo de luta estilo Street Fighter com sátira de políticos brasileiros usando LittleJS engine. Suporte a controle de Xbox e 10 personagens.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Arcade Marquee Header -->
+  <header class="arcade-header">
+    <div class="marquee-title">
+      <span class="marquee-badge">16-BIT RETRO</span>
+      <span id="gamepad-badge" class="marquee-badge green" style="display: none;">🎮 XBOX CONECTADO</span>
+      <h1 class="marquee-text">CONGRESSO KOMBAT</h1>
+    </div>
+    <div class="header-controls">
+      <button id="btn-audio" class="arcade-btn" title="Ligar/Desligar Áudio e BGM">
+        🔊 Áudio: <span id="audio-status">Ligado</span>
+      </button>
+      <button id="btn-scanlines" class="arcade-btn" title="Ligar/Desligar Efeito CRT">
+        📺 CRT Scanlines: <span id="scanlines-status">Ligado</span>
+      </button>
+      <button id="btn-howto" class="arcade-btn" title="Instruções de Jogo e Golpes">
+        ❓ Como Jogar
+      </button>
+      <button id="btn-fullscreen" class="arcade-btn" title="Tela Cheia">
+        ⛶ Tela Cheia
+      </button>
+    </div>
+  </header>
+
+  <!-- Arcade Cabinet Frame -->
+  <main class="arcade-cabinet">
+    <div id="screen-container" class="screen-container">
+      <div id="scanlines" class="scanlines-overlay"></div>
+    </div>
+  </main>
+
+  <!-- Controls Dashboard (3 Cards: P1, P2 and Xbox Controller) -->
+  <section class="controls-dashboard">
+    <!-- Player 1 Keyboard Controls -->
+    <div class="control-card p1">
+      <div class="card-title p1">
+        <span>⌨️</span> P1 - TECLADO
+      </div>
+      <div class="keys-grid">
+        <div class="key-item"><span class="kbd-badge">A</span> / <span class="kbd-badge">D</span> Andar / Recuar</div>
+        <div class="key-item"><span class="kbd-badge">W</span> Pular</div>
+        <div class="key-item"><span class="kbd-badge">S</span> Agachar / Bloquear</div>
+        <div class="key-item"><span class="kbd-badge">J</span> Soco Rápido</div>
+        <div class="key-item"><span class="kbd-badge">K</span> Soco Forte</div>
+        <div class="key-item"><span class="kbd-badge">L</span> Chute</div>
+        <div class="key-item"><span class="kbd-badge">U</span> Golpe Especial</div>
+        <div class="key-item"><span class="kbd-badge">Espaço</span> Super CPI (100%)</div>
+      </div>
+    </div>
+
+    <!-- Player 2 Keyboard Controls -->
+    <div class="control-card p2">
+      <div class="card-title p2">
+        <span>🥊</span> P2 - TECLADO (VERSUS)
+      </div>
+      <div class="keys-grid">
+        <div class="key-item"><span class="kbd-badge">4</span> / <span class="kbd-badge">6</span> ou <span class="kbd-badge">G</span>/<span class="kbd-badge">J</span> Andar</div>
+        <div class="key-item"><span class="kbd-badge">8</span> ou <span class="kbd-badge">Y</span> Pular</div>
+        <div class="key-item"><span class="kbd-badge">5</span> ou <span class="kbd-badge">H</span> Agachar / Bloquear</div>
+        <div class="key-item"><span class="kbd-badge">1</span> ou <span class="kbd-badge">B</span> Soco Rápido</div>
+        <div class="key-item"><span class="kbd-badge">2</span> ou <span class="kbd-badge">N</span> Soco Forte</div>
+        <div class="key-item"><span class="kbd-badge">3</span> ou <span class="kbd-badge">M</span> Chute</div>
+        <div class="key-item"><span class="kbd-badge">0</span> ou <span class="kbd-badge">O</span> Golpe Especial</div>
+        <div class="key-item"><span class="kbd-badge">Enter</span> ou <span class="kbd-badge">P</span> Super CPI (100%)</div>
+      </div>
+    </div>
+
+    <!-- Xbox Controller (P1 / P2) -->
+    <div class="control-card xbox">
+      <div class="card-title xbox">
+        <span>🎮</span> CONTROLE XBOX (<span id="gamepad-status">Pronto para Conectar</span>)
+      </div>
+      <div class="keys-grid">
+        <div class="key-item"><span class="xbox-badge pill">D-PAD</span> ou <span class="xbox-badge pill">STICK ESQ</span> Movimentação / Pulo</div>
+        <div class="key-item"><span class="xbox-badge a">A</span> Soco Rápido / Confirmar Menu</div>
+        <div class="key-item"><span class="xbox-badge x">X</span> Soco Forte</div>
+        <div class="key-item"><span class="xbox-badge b">B</span> Chute / Voltar Menu</div>
+        <div class="key-item"><span class="xbox-badge y">Y</span> Golpe Especial (Projétil)</div>
+        <div class="key-item"><span class="xbox-badge pill">RB</span> ou <span class="xbox-badge pill">RT</span> Super CPI (100%)</div>
+        <div class="key-item"><span class="xbox-badge pill">LB</span> ou <span class="xbox-badge pill">LT</span> Guarda / Bloqueio</div>
+        <div class="key-item"><span class="xbox-badge pill">START</span> Iniciar / Pausa</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Virtual Quick Action Bar -->
+  <div class="virtual-bar">
+    <button class="v-btn" onclick="triggerKey('Enter')">ENTER (Start/OK)</button>
+    <button class="v-btn" onclick="triggerKey('KeyA')">← Andar</button>
+    <button class="v-btn" onclick="triggerKey('KeyD')">Andar →</button>
+    <button class="v-btn" onclick="triggerKey('KeyW')">Pular</button>
+    <button class="v-btn" onclick="triggerKey('KeyS')">Agachar/Defesa</button>
+    <button class="v-btn" onclick="triggerKey('KeyJ')">Soco J / [A]</button>
+    <button class="v-btn" onclick="triggerKey('KeyK')">Forte K / [X]</button>
+    <button class="v-btn" onclick="triggerKey('KeyL')">Chute L / [B]</button>
+    <button class="v-btn" onclick="triggerKey('KeyU')">Especial U / [Y]</button>
+    <button class="v-btn" onclick="triggerKey('Space')">SUPER CPI / [RB]</button>
+  </div>
+
+  <!-- How to Play Modal -->
+  <div id="modal-howto" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">COMO JOGAR CONGRESSO KOMBAT</h3>
+        <button id="modal-close" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h4>🏛 10 Personagens Separados por Espectro Político:</h4>
+        <p><strong>★ Ala Esquerda (5):</strong> Lula, Dilma Rousseff, Fernando Haddad, Guilherme Boulos, Jones Manoel.<br>
+        <strong>★ Ala Direita (5):</strong> Jair Bolsonaro, Tarcísio de Freitas, Nikolas Ferreira, Flávio Bolsonaro, Eduarda Campopiano.</p>
+        
+        <h4>🌐 Modo Online (PeerJS WebRTC):</h4>
+        <p>Jogue contra amigos em qualquer lugar ou em duas abas do navegador! Um jogador cria a sala e compartilha o código de 4 dígitos; o outro jogador entra com o código e a luta começa com conexão P2P direta sem lag!</p>
+
+        <h4>🎮 Suporte Nativo a Controle de Xbox:</h4>
+        <p>Basta plugar seu controle de Xbox (Xbox 360, Xbox One, Xbox Series ou compatível via USB/Bluetooth) e pressionar qualquer botão para começar a jogar automaticamente!</p>
+
+        <h4>⚡ Golpes & Mecânicas Street Fighter:</h4>
+        <ul>
+          <li><strong>Defesa / Bloqueio:</strong> Segure para trás ao ser atacado para absorver 80% do dano.</li>
+          <li><strong>Combos:</strong> Encadeie socos rápidos com soco forte e projétil especial para atingir 3 ou 4 HITS!</li>
+          <li><strong>Cédulas de R$ 100 e R$ 50:</strong> A cada porrada no plenário, notas voam pelo ar em sátira ao congresso.</li>
+          <li><strong>Super CPI (Poder Político):</strong> Barra inferior enche até 100%. Pressione <strong>[Espaço]</strong> ou <strong>[RB/RT]</strong> do controle de Xbox para desencadear o ataque supremo!</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Online Multiplayer Modal (PeerJS) -->
+  <div id="modal-online" class="modal-overlay">
+    <div class="modal-box online-box">
+      <div class="modal-header">
+        <h3 class="modal-title">🌐 VERSUS ONLINE (PEERJS WebRTC)</h3>
+        <button id="online-modal-close" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 16px;">Conecte-se diretamente com outro jogador via WebRTC P2P sem servidores intermediários!</p>
+
+        <!-- Host Section -->
+        <div class="online-section">
+          <h4>1. CRIAR UMA SALA (Jogador 1 / Host)</h4>
+          <p style="font-size: 13px; color: #a4b0be; margin-bottom: 8px;">Crie a sala e envie o código para seu oponente:</p>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="btn-create-room" class="arcade-btn green-btn">⚡ Criar Nova Sala</button>
+            <div id="host-code-display" class="room-code-tag" style="display: none;">
+              Código: <strong id="host-room-code">---</strong>
+              <button id="btn-copy-code" class="mini-copy-btn" title="Copiar Código">Copiar</button>
+            </div>
+          </div>
+          <div id="host-status" class="online-status-text"></div>
+        </div>
+
+        <div style="text-align: center; margin: 16px 0; color: #64748b; font-weight: bold;">— OU —</div>
+
+        <!-- Join Section -->
+        <div class="online-section">
+          <h4>2. ENTRAR EM UMA SALA (Jogador 2 / Visitante)</h4>
+          <p style="font-size: 13px; color: #a4b0be; margin-bottom: 8px;">Digite o código da sala gerado pelo seu amigo:</p>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="input-room-code" placeholder="Ex: CK-7A2B" class="room-input" maxlength="10">
+            <button id="btn-join-room" class="arcade-btn blue-btn">Entrar na Sala</button>
+          </div>
+          <div id="join-status" class="online-status-text"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PeerJS Library -->
+  <script src="./peerjs.min.js"></script>
+
+  <!-- LittleJS Game Script -->
+  <script type="module" src="./game.js"></script>
+
+  <!-- Interactive Controls Setup -->
+  <script type="module">
+    import { gamepadManager } from './gamepad.js';
+
+    // Gamepad live status checking loop
+    setInterval(() => {
+      gamepadManager.updateStatusUI();
+    }, 500);
+
+    // Audio Toggle
+    const btnAudio = document.getElementById('btn-audio');
+    const audioStatus = document.getElementById('audio-status');
+    btnAudio.addEventListener('click', async () => {
+      const module = await import('./audio.js');
+      const isMuted = module.arcadeAudio.toggleMute();
+      audioStatus.textContent = isMuted ? 'Mudo' : 'Ligado';
+    });
+
+    // Scanlines Toggle
+    const btnScanlines = document.getElementById('btn-scanlines');
+    const scanlinesStatus = document.getElementById('scanlines-status');
+    const scanlines = document.getElementById('scanlines');
+    btnScanlines.addEventListener('click', () => {
+      scanlines.classList.toggle('disabled');
+      const isOn = !scanlines.classList.contains('disabled');
+      scanlinesStatus.textContent = isOn ? 'Ligado' : 'Desligado';
+    });
+
+    // Fullscreen Toggle
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    btnFullscreen.addEventListener('click', () => {
+      const el = document.getElementById('screen-container');
+      if (!document.fullscreenElement) {
+        el.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    // Modal How To Play
+    const btnHowto = document.getElementById('btn-howto');
+    const modalHowto = document.getElementById('modal-howto');
+    const modalClose = document.getElementById('modal-close');
+    btnHowto.addEventListener('click', () => modalHowto.classList.add('active'));
+    modalClose.addEventListener('click', () => modalHowto.classList.remove('active'));
+    modalHowto.addEventListener('click', (e) => {
+      if (e.target === modalHowto) modalHowto.classList.remove('active');
+    });
+
+    // Virtual Buttons Helper
+    window.triggerKey = function(code) {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: code, bubbles: true }));
+      setTimeout(() => {
+        window.dispatchEvent(new KeyboardEvent('keyup', { code: code, bubbles: true }));
+      }, 150);
+    };
+  </script>
+</body>
+</html>

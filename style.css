@@ -1,0 +1,464 @@
+/* style.css - Retro Arcade Cabinet Presentation & Responsive Layout */
+
+:root {
+  --bg-dark: #07090e;
+  --panel-bg: #111622;
+  --accent-gold: #ffd32a;
+  --accent-green: #2ecc71;
+  --accent-red: #ff4757;
+  --accent-blue: #1e90ff;
+  --text-main: #f1f2f6;
+  --text-muted: #a4b0be;
+  --border-neon: rgba(255, 211, 42, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 50% 20%, rgba(39, 174, 96, 0.12), transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(192, 57, 43, 0.12), transparent 50%),
+    linear-gradient(180deg, #07090e 0%, #0d131f 100%);
+}
+
+/* Header Arcade Marquee */
+.arcade-header {
+  width: 100%;
+  max-width: 1320px;
+  padding: 16px 20px 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid rgba(255, 211, 42, 0.2);
+}
+
+.marquee-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.marquee-badge {
+  background: linear-gradient(135deg, #27ae60, #f39c12);
+  color: #fff;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 0 10px rgba(39, 174, 96, 0.4);
+}
+
+.marquee-text {
+  font-family: 'Impact', sans-serif;
+  font-size: 28px;
+  letter-spacing: 2px;
+  background: linear-gradient(180deg, #ffd32a 0%, #ff6b6b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px rgba(255, 211, 42, 0.5));
+}
+
+.header-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.arcade-btn {
+  background: #1e2433;
+  color: var(--accent-gold);
+  border: 1px solid #334155;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.arcade-btn:hover {
+  background: #2a3449;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 12px rgba(255, 211, 42, 0.3);
+  transform: translateY(-1px);
+}
+
+.arcade-btn:active {
+  transform: translateY(1px);
+}
+
+/* Arcade Cabinet Bezel Wrapper */
+.arcade-cabinet {
+  width: 100%;
+  max-width: 1300px;
+  margin: 12px auto;
+  position: relative;
+  background: #141a29;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.8),
+    0 0 0 2px #263249,
+    0 0 30px rgba(255, 211, 42, 0.15);
+}
+
+/* CRT Screen Frame */
+.screen-container {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* LittleJS Canvas Styling */
+.screen-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* CRT Scanlines Overlay */
+.scanlines-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 10;
+  opacity: 0.6;
+}
+
+.scanlines-overlay.disabled {
+  display: none;
+}
+
+/* Arcade Controls Panel */
+.controls-dashboard {
+  width: 100%;
+  max-width: 1300px;
+  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.control-card {
+  background: rgba(17, 22, 34, 0.85);
+  border: 1px solid #232c40;
+  border-radius: 10px;
+  padding: 16px 20px;
+  backdrop-filter: blur(8px);
+}
+
+.control-card.p1 { border-left: 4px solid #3498db; }
+.control-card.p2 { border-left: 4px solid #e67e22; }
+.control-card.xbox { border-left: 4px solid #2ecc71; }
+
+.card-title {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title.p1 { color: #3498db; }
+.card-title.p2 { color: #e67e22; }
+.card-title.xbox { color: #2ecc71; }
+
+.keys-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.key-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.kbd-badge {
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #475569;
+  border-bottom: 2px solid #334155;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 12px;
+  min-width: 28px;
+  text-align: center;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+}
+
+/* Xbox Controller Badges */
+.xbox-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-weight: 900;
+  font-size: 12px;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.xbox-badge.a { background: #2ecc71; color: #000; }
+.xbox-badge.b { background: #e74c3c; }
+.xbox-badge.x { background: #3498db; }
+.xbox-badge.y { background: #f1c40f; color: #000; }
+
+.xbox-badge.pill {
+  width: auto;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #2c3e50;
+  border: 1px solid #475569;
+  font-size: 11px;
+}
+
+.marquee-badge.green {
+  background: linear-gradient(135deg, #10ac84, #1dd1a1);
+  box-shadow: 0 0 10px rgba(16, 172, 132, 0.6);
+  animation: pulse-green 1.5s infinite alternate;
+}
+
+@keyframes pulse-green {
+  from { opacity: 0.8; }
+  to { opacity: 1; transform: scale(1.05); }
+}
+
+/* Touch / Virtual Quick Bar for testing or mobile */
+.virtual-bar {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.v-btn {
+  background: #1e2438;
+  color: #fff;
+  border: 1px solid #3d4a68;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.v-btn:active {
+  background: #34495e;
+}
+
+/* Modal Instructions */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(5px);
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-box {
+  background: #141a29;
+  border: 2px solid var(--accent-gold);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+  width: 90%;
+  color: #fff;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-title {
+  font-size: 22px;
+  color: var(--accent-gold);
+  font-weight: bold;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.modal-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #cbd5e1;
+}
+
+.modal-body h4 {
+  color: #ffd32a;
+  margin: 12px 0 6px 0;
+}
+
+/* Online Modal Specifics */
+.online-box {
+  max-width: 650px;
+}
+
+.online-section {
+  background: #0d131f;
+  border: 1px solid #243048;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.room-input {
+  flex: 1;
+  background: #162032;
+  border: 2px solid #3b4d6b;
+  color: #ffd32a;
+  font-family: monospace;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.room-input:focus {
+  border-color: #ffd32a;
+  box-shadow: 0 0 10px rgba(255, 211, 42, 0.3);
+}
+
+.room-code-tag {
+  background: #1b263b;
+  border: 1px solid #ffd32a;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: #fff;
+  font-family: monospace;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-code-tag strong {
+  color: #ffd32a;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+.mini-copy-btn {
+  background: #ffd32a;
+  color: #000;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.mini-copy-btn:hover {
+  background: #ffeaa7;
+}
+
+.green-btn {
+  background: #27ae60 !important;
+  color: #fff !important;
+  border-color: #2ecc71 !important;
+}
+
+.green-btn:hover {
+  background: #2ecc71 !important;
+  box-shadow: 0 0 12px rgba(46, 204, 113, 0.4) !important;
+}
+
+.blue-btn {
+  background: #2980b9 !important;
+  color: #fff !important;
+  border-color: #3498db !important;
+}
+
+.blue-btn:hover {
+  background: #3498db !important;
+  box-shadow: 0 0 12px rgba(52, 152, 219, 0.4) !important;
+}
+
+.online-status-text {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #ffd32a;
+  min-height: 18px;
+}
+
+/* Responsiveness */
+@media (max-width: 900px) {
+  .controls-dashboard {
+    grid-template-columns: 1fr;
+  }
+  .marquee-text {
+    font-size: 20px;
+  }
+}
+
