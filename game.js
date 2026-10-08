@@ -18,6 +18,7 @@ import { particleSystem } from './particles.js';
 import { arcadeAudio } from './audio.js';
 import { gamepadManager } from './gamepad.js';
 import { networkManager } from './network.js';
+import { touchControls } from './touchControls.js';
 
 // Game Screen States
 const SCREEN = {
@@ -129,9 +130,10 @@ function wasKeyPressed(code) {
   return keys[code] && !prevKeys[code];
 }
 
-// Map Controls for P1 and P2 (Keyboard + Xbox Gamepad Merged!)
+// Map Controls for P1 and P2 (Keyboard + Xbox Gamepad + Touch Controls Merged!)
 function getPlayerInputs(playerNum) {
   const gp = gamepadManager.getInputs(playerNum - 1);
+  const tc = (playerNum === 1) ? touchControls.getInputs() : {};
 
   if (playerNum === 1) {
     const kbLeft = keys['KeyA'] || keys['ArrowLeft'];
@@ -145,16 +147,16 @@ function getPlayerInputs(playerNum) {
     const kbSuper = keys['KeyI'] || keys['Space'];
 
     return {
-      left: kbLeft || gp.left,
-      right: kbRight || gp.right,
-      up: kbUp || gp.up,
-      down: kbDown || gp.down,
-      punchLight: kbPunchL || gp.punchLight,
-      punchHeavy: kbPunchH || gp.punchHeavy,
-      kick: kbKick || gp.kick,
-      special: kbSpecial || gp.special,
-      super: kbSuper || gp.super,
-      start: keys['Enter'] || gp.start
+      left: kbLeft || gp.left || tc.left,
+      right: kbRight || gp.right || tc.right,
+      up: kbUp || gp.up || tc.up,
+      down: kbDown || gp.down || tc.down,
+      punchLight: kbPunchL || gp.punchLight || tc.punchLight,
+      punchHeavy: kbPunchH || gp.punchHeavy || tc.punchHeavy,
+      kick: kbKick || gp.kick || tc.kick,
+      special: kbSpecial || gp.special || tc.special,
+      super: kbSuper || gp.super || tc.super,
+      start: keys['Enter'] || gp.start || tc.start
     };
   } else {
     // Player 2 controls (Keyboard Numpad/Alt + Gamepad 1)
@@ -183,15 +185,15 @@ function getPlayerInputs(playerNum) {
   }
 }
 
-// Check single menu action from Keyboard or Xbox controller
+// Check single menu action from Keyboard, Xbox controller, or Touch Controls
 function checkMenuAction(playerIndex, action) {
   if (playerIndex === 0) {
-    if (action === 'up') return wasKeyPressed('ArrowUp') || wasKeyPressed('KeyW') || gamepadManager.wasButtonPressed(0, 'up');
-    if (action === 'down') return wasKeyPressed('ArrowDown') || wasKeyPressed('KeyS') || gamepadManager.wasButtonPressed(0, 'down');
-    if (action === 'left') return wasKeyPressed('ArrowLeft') || wasKeyPressed('KeyA') || gamepadManager.wasButtonPressed(0, 'left');
-    if (action === 'right') return wasKeyPressed('ArrowRight') || wasKeyPressed('KeyD') || gamepadManager.wasButtonPressed(0, 'right');
-    if (action === 'confirm') return wasKeyPressed('Enter') || wasKeyPressed('Space') || wasKeyPressed('KeyJ') || gamepadManager.wasButtonPressed(0, 'punchLight') || gamepadManager.wasButtonPressed(0, 'start');
-    if (action === 'back') return wasKeyPressed('Escape') || gamepadManager.wasButtonPressed(0, 'kick');
+    if (action === 'up') return wasKeyPressed('ArrowUp') || wasKeyPressed('KeyW') || gamepadManager.wasButtonPressed(0, 'up') || touchControls.wasAction('up');
+    if (action === 'down') return wasKeyPressed('ArrowDown') || wasKeyPressed('KeyS') || gamepadManager.wasButtonPressed(0, 'down') || touchControls.wasAction('down');
+    if (action === 'left') return wasKeyPressed('ArrowLeft') || wasKeyPressed('KeyA') || gamepadManager.wasButtonPressed(0, 'left') || touchControls.wasAction('left');
+    if (action === 'right') return wasKeyPressed('ArrowRight') || wasKeyPressed('KeyD') || gamepadManager.wasButtonPressed(0, 'right') || touchControls.wasAction('right');
+    if (action === 'confirm') return wasKeyPressed('Enter') || wasKeyPressed('Space') || wasKeyPressed('KeyJ') || gamepadManager.wasButtonPressed(0, 'punchLight') || gamepadManager.wasButtonPressed(0, 'start') || touchControls.wasAction('confirm');
+    if (action === 'back') return wasKeyPressed('Escape') || gamepadManager.wasButtonPressed(0, 'kick') || touchControls.wasAction('back');
   } else {
     if (action === 'up') return wasKeyPressed('Numpad8') || wasKeyPressed('KeyY') || gamepadManager.wasButtonPressed(1, 'up');
     if (action === 'down') return wasKeyPressed('Numpad5') || wasKeyPressed('KeyH') || gamepadManager.wasButtonPressed(1, 'down');
@@ -381,14 +383,104 @@ function gameInit() {
     });
   }
 
-  if (onlineModalClose && modalOnline) {
-    onlineModalClose.addEventListener('click', () => {
-      modalOnline.classList.remove('active');
-      networkManager.disconnect();
-    });
+  // Direct Canvas Touch / Click Support for Mobile UI & Character Selection
+  if (mainCanvas) {
+    const handleCanvasTap = (e) => {
+      // Don't intercept if touching virtual control buttons
+      if (e.target && e.target.closest && e.target.closest('.touch-controls-wrapper')) return;
+
+      const rect = mainCanvas.getBoundingClientRect();
+      const scaleX = CANVAS_WIDTH / rect.width;
+      const scaleY = CANVAS_HEIGHT / rect.height;
+      const touchEv = (e.touches && e.touches[0]) ? e.touches[0] : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : e);
+      const tapX = (touchEv.clientX - rect.left) * scaleX;
+      const tapY = (touchEv.clientY - rect.top) * scaleY;
+
+      if (currentScreen === SCREEN.TITLE) {
+        currentScreen = SCREEN.MODE_SELECT;
+        arcadeAudio.menuConfirm();
+        return;
+      }
+
+      if (currentScreen === SCREEN.MODE_SELECT) {
+        MODES.forEach((m, i) => {
+          const y = 190 + i * 140;
+          if (tapX >= CANVAS_WIDTH / 2 - 380 && tapX <= CANVAS_WIDTH / 2 + 380 && tapY >= y && tapY <= y + 110) {
+            modeIndex = i;
+            const selected = MODES[modeIndex].id;
+            arcadeAudio.menuConfirm();
+            if (selected === 'ONLINE') {
+              const modal = document.getElementById('modal-online');
+              if (modal) modal.classList.add('active');
+              return;
+            }
+            gameMode = selected;
+            p1SelectIndex = 0;
+            p2SelectIndex = 5;
+            p1Confirmed = false;
+            p2Confirmed = false;
+            currentScreen = SCREEN.CHAR_SELECT;
+          }
+        });
+        return;
+      }
+
+      if (currentScreen === SCREEN.CHAR_SELECT) {
+        CHARACTERS.forEach((c, i) => {
+          const cardX = (i < 5) ? (40 + i * 116) : (670 + (i - 5) * 116);
+          const cardY = 108;
+          const cardW = 104;
+          const cardH = 145;
+
+          if (tapX >= cardX && tapX <= cardX + cardW && tapY >= cardY && tapY <= cardY + cardH) {
+            if (!p1Confirmed) {
+              if (p1SelectIndex === i) {
+                p1Confirmed = true;
+                arcadeAudio.menuConfirm();
+                arcadeAudio.speak(CHARACTERS[p1SelectIndex].name);
+                p2SelectIndex = (p1SelectIndex < 5) ? 5 : 0;
+                p2Confirmed = false;
+              } else {
+                p1SelectIndex = i;
+                arcadeAudio.menuSelect();
+              }
+            } else if (!p2Confirmed && gameMode !== 'ONLINE') {
+              if (p2SelectIndex === i) {
+                p2Confirmed = true;
+                arcadeAudio.menuConfirm();
+                arcadeAudio.speak(CHARACTERS[p2SelectIndex].name);
+                setTimeout(() => {
+                  versusTimer = 0;
+                  currentScreen = SCREEN.VERSUS;
+                  arcadeAudio.speak(`${CHARACTERS[p1SelectIndex].name} contra ${CHARACTERS[p2SelectIndex].name}!`);
+                }, 400);
+              } else {
+                p2SelectIndex = i;
+                arcadeAudio.menuSelect();
+              }
+            }
+          }
+        });
+        return;
+      }
+
+      if (currentScreen === SCREEN.MATCH_OVER) {
+        currentScreen = SCREEN.CHAR_SELECT;
+        p1Confirmed = false;
+        p2Confirmed = false;
+        arcadeAudio.menuConfirm();
+      }
+    };
+
+    mainCanvas.addEventListener('click', handleCanvasTap);
+    mainCanvas.addEventListener('touchend', (e) => {
+      // Prevent unwanted double-firing with click
+      handleCanvasTap(e);
+      e.preventDefault();
+    }, { passive: false });
   }
 
-  console.log('[Congresso Kombat] 10 Personagens, Xbox e Modo Online PeerJS prontos!');
+  console.log('[Congresso Kombat] 10 Personagens, Xbox, Touch Mobile e PWA prontos!');
 }
 
 // --- UPDATE ---

@@ -2,9 +2,17 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Congresso Kombat: Luta pelo Poder (10 Personagens & Controle Xbox)</title>
-  <meta name="description" content="Jogo de luta estilo Street Fighter com sátira de políticos brasileiros usando LittleJS engine. Suporte a controle de Xbox e 10 personagens.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Congresso Kombat: Luta pelo Poder (10 Personagens & PWA)</title>
+  <meta name="description" content="Jogo de luta estilo Street Fighter com sátira de políticos brasileiros usando LittleJS engine. Suporte a controle de Xbox, Touch Mobile e PWA offline.">
+  <meta name="theme-color" content="#e74c3c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Congresso Kombat">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,8 +28,14 @@
       <button id="btn-audio" class="arcade-btn" title="Ligar/Desligar Áudio e BGM">
         🔊 Áudio: <span id="audio-status">Ligado</span>
       </button>
+      <button id="btn-touch" class="arcade-btn" title="Ligar/Desligar Controles Virtuais Touch">
+        📱 Touch: <span id="touch-status">Auto</span>
+      </button>
       <button id="btn-scanlines" class="arcade-btn" title="Ligar/Desligar Efeito CRT">
         📺 CRT Scanlines: <span id="scanlines-status">Ligado</span>
+      </button>
+      <button id="btn-pwa-install" class="arcade-btn" style="display: none;" title="Instalar Aplicativo">
+        ⬇ Instalar App
       </button>
       <button id="btn-howto" class="arcade-btn" title="Instruções de Jogo e Golpes">
         ❓ Como Jogar
@@ -185,6 +199,7 @@
   <!-- Interactive Controls Setup -->
   <script type="module">
     import { gamepadManager } from './gamepad.js';
+    import { touchControls } from './touchControls.js';
 
     // Gamepad live status checking loop
     setInterval(() => {
@@ -198,6 +213,15 @@
       const module = await import('./audio.js');
       const isMuted = module.arcadeAudio.toggleMute();
       audioStatus.textContent = isMuted ? 'Mudo' : 'Ligado';
+    });
+
+    // Touch Controls Toggle
+    const btnTouch = document.getElementById('btn-touch');
+    const touchStatus = document.getElementById('touch-status');
+    touchStatus.textContent = touchControls.enabled ? 'Ligado' : 'Desligado';
+    btnTouch.addEventListener('click', () => {
+      const isEnabled = touchControls.toggle();
+      touchStatus.textContent = isEnabled ? 'Ligado' : 'Desligado';
     });
 
     // Scanlines Toggle
@@ -220,6 +244,36 @@
         document.exitFullscreen().catch(() => {});
       }
     });
+
+    // PWA Install Prompt Handler
+    let deferredPrompt = null;
+    const btnPwaInstall = document.getElementById('btn-pwa-install');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (btnPwaInstall) btnPwaInstall.style.display = 'flex';
+    });
+
+    if (btnPwaInstall) {
+      btnPwaInstall.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          btnPwaInstall.style.display = 'none';
+        }
+        deferredPrompt = null;
+      });
+    }
+
+    // Register Service Worker for Offline PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('[PWA] Service Worker registrado:', reg.scope))
+          .catch((err) => console.warn('[PWA] Erro ao registrar Service Worker:', err));
+      });
+    }
 
     // Modal How To Play
     const btnHowto = document.getElementById('btn-howto');

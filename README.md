@@ -77,10 +77,37 @@ Um jogo de luta 2D no estilo clássico dos fliperamas dos anos 90 (*Street Fight
 - **Especial & Super:** `0` (Numpad) ou `O` / `Enter` (Numpad) ou `P`
 
 ---
+---
+
+### 📱 Controles Touch para Mobile (Overlay Virtual):
+| Ação | Botão Touch na Tela |
+| :--- | :--- |
+| **Mover / Andar** | `D-Pad ◀ / ▶` |
+| **Pular** | `D-Pad ▲` |
+| **Agachar / Bloquear** | `D-Pad ▼` |
+| **Soco Rápido** | Botão `LP` (Verde) |
+| **Soco Forte** | Botão `HP` (Azul) |
+| **Chute** | Botão `LK` (Laranja) |
+| **Golpe Especial** | Botão `SP` (Amarelo) |
+| **Super CPI (100%)** | Botão `SUPER` (Vermelho) |
+| **Pausa / Menu** | Botão `⏸ PAUSE` ou `⮌ BACK` (Topo direito) |
+
+*Dica:* Em telas sensíveis ao toque, você também pode **tocar diretamente nas cartas dos candidatos** para selecioná-los e confirmá-los!
+
+---
+
+## 📲 Suporte a PWA (Progressive Web App)
+
+O jogo funciona como um **PWA completo**:
+- **Instalável:** No Android (Chrome), iOS (Safari - *Adicionar à Tela de Início*) ou Desktop, clique em **⬇ Instalar App** ou no menu do navegador para instalar como aplicativo nativo independente.
+- **Orientação Paisagem Automática:** Roda em tela cheia na horizontal para máxima ergonomia de fliperama.
+- **Offline Ready:** Utiliza Service Worker para cachear assets, código e áudio, permitindo abrir e jogar mesmo sem internet.
+
+---
 
 ## 🚀 Como Executar
 
-O servidor já está ativo. Para rodar novamente a qualquer momento:
+O servidor local já está configurado. Para rodar a qualquer momento:
 
 ```bash
 npm start
@@ -88,3 +115,4 @@ npm start
 
 Abra no navegador em:
 👉 **`http://localhost:3000`**
+
