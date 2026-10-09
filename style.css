@@ -601,6 +601,67 @@ body {
   display: none !important;
 }
 
+.touch-pause-controls {
+  position: absolute;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 105;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.touch-pause-controls[hidden] {
+  display: none !important;
+}
+
+.touch-pause-btn,
+.touch-pause-menu-btn {
+  min-width: 78px;
+  height: 44px;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 2px solid rgba(255, 211, 42, 0.7);
+  border-radius: 22px;
+  background: rgba(17, 24, 39, 0.88);
+  color: #ffd32a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.touch-pause-btn:active,
+.touch-pause-btn.active,
+.touch-pause-menu-btn:active,
+.touch-pause-menu-btn.active {
+  transform: scale(0.94);
+  background: rgba(255, 211, 42, 0.35);
+}
+
+.touch-pause-menu-btn {
+  border-color: rgba(231, 76, 60, 0.8);
+  color: #ff8a80;
+}
+
+.touch-pause-menu-btn[hidden] {
+  display: none !important;
+}
+
+.touch-pause-icon {
+  font-size: 16px;
+}
+
+.touch-pause-label {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
 /* Virtual D-Pad (Left Side) */
 .touch-dpad-container {
   position: relative;
@@ -896,7 +957,9 @@ body {
 html:fullscreen,
 html:fullscreen body,
 html:-webkit-full-screen,
-html:-webkit-full-screen body {
+html:-webkit-full-screen body,
+html.fullscreen-active,
+html.fullscreen-active body {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -910,14 +973,19 @@ html:fullscreen .controls-dashboard,
 html:fullscreen .virtual-bar,
 html:-webkit-full-screen .arcade-header,
 html:-webkit-full-screen .controls-dashboard,
-html:-webkit-full-screen .virtual-bar {
+html:-webkit-full-screen .virtual-bar,
+html.fullscreen-active .arcade-header,
+html.fullscreen-active .controls-dashboard,
+html.fullscreen-active .virtual-bar {
   display: none !important;
 }
 
 html:fullscreen .arcade-cabinet,
 html:fullscreen .screen-container,
 html:-webkit-full-screen .arcade-cabinet,
-html:-webkit-full-screen .screen-container {
+html:-webkit-full-screen .screen-container,
+html.fullscreen-active .arcade-cabinet,
+html.fullscreen-active .screen-container {
   width: 100vw;
   height: 100vh;
   max-width: none;
@@ -925,6 +993,12 @@ html:-webkit-full-screen .screen-container {
   padding: 0;
   border: 0;
   border-radius: 0;
+}
+
+html:fullscreen .modal-overlay,
+html:-webkit-full-screen .modal-overlay,
+html.fullscreen-active .modal-overlay {
+  z-index: 1200;
 }
 
 

@@ -27,7 +27,9 @@ class TouchControls {
       left: false,
       right: false,
       confirm: false,
-      back: false
+      back: false,
+      pause: false,
+      pauseMenu: false
     };
 
     // Action buttons are contextual: menu/select or fight.
@@ -97,6 +99,27 @@ class TouchControls {
     }
   }
 
+  setPauseAvailable(available) {
+    const controls = this.container?.querySelector('[data-role="pause-controls"]');
+    if (controls) controls.hidden = !available;
+    if (!available) {
+      this.actionPulses.pause = false;
+      this.actionPulses.pauseMenu = false;
+      controls?.querySelectorAll('.active').forEach((button) => button.classList.remove('active'));
+    }
+  }
+
+  setPaused(paused) {
+    const pauseButton = this.container?.querySelector('[data-key="pause"]');
+    const menuButton = this.container?.querySelector('[data-key="pauseMenu"]');
+    const icon = pauseButton?.querySelector('.touch-pause-icon');
+    const label = pauseButton?.querySelector('.touch-pause-label');
+    if (icon) icon.textContent = paused ? '▶' : '⏸';
+    if (label) label.textContent = paused ? 'CONTINUAR' : 'PAUSA';
+    if (menuButton) menuButton.hidden = !paused;
+    if (!paused) this.actionPulses.pauseMenu = false;
+  }
+
   // Clears all held states, pulses and visual 'active' classes (stuck-state guard).
   releaseAll() {
     for (const key of Object.keys(this.state)) this.state[key] = false;
@@ -132,6 +155,17 @@ class TouchControls {
     wrapper.className = 'touch-controls-wrapper';
 
     wrapper.innerHTML = `
+      <div class="touch-pause-controls" data-role="pause-controls" hidden>
+        <button type="button" class="touch-pause-btn" data-key="pause" aria-label="Pausar ou continuar luta">
+          <span class="touch-pause-icon">⏸</span>
+          <span class="touch-pause-label">PAUSA</span>
+        </button>
+        <button type="button" class="touch-pause-menu-btn" data-key="pauseMenu" aria-label="Voltar ao menu de personagens" hidden>
+          <span class="touch-pause-icon">↩</span>
+          <span class="touch-pause-label">MENU</span>
+        </button>
+      </div>
+
       <!-- Left D-Pad -->
       <div class="touch-dpad-container" id="touch-dpad">
         <div class="touch-dpad-center"></div>
@@ -280,6 +314,11 @@ class TouchControls {
   }
 
   setButtonState(key, isPressed) {
+    if (key === 'pause' || key === 'pauseMenu') {
+      if (isPressed) this.actionPulses[key] = true;
+      return;
+    }
+
     if (this.state.hasOwnProperty(key)) {
       const wasFalse = !this.state[key];
       this.state[key] = isPressed;
@@ -329,7 +368,7 @@ class TouchControls {
     for (const key of Object.keys(this.actionPulses)) this.actionPulses[key] = false;
   }
 
-  // Returns true once per menu pulse ('up'|'down'|'left'|'right'|'confirm'|'back')
+  // Returns true once per pulse ('up'|'down'|'left'|'right'|'confirm'|'back'|'pause'|'pauseMenu')
   wasAction(action) {
     if (this.actionPulses[action]) {
       this.actionPulses[action] = false;

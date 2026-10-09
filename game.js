@@ -254,8 +254,12 @@ function checkMenuAction(playerIndex, action) {
 }
 
 // Touch contract: LP confirms and LK goes back in menus; both revert to attacks in fights.
-function setTouchContext(context) {
+function setTouchContext(context, pauseAvailable = false, isPaused = false) {
   if (typeof touchControls.setContext === 'function') touchControls.setContext(context);
+  if (typeof touchControls.setPauseAvailable === 'function') {
+    touchControls.setPauseAvailable(pauseAvailable);
+  }
+  if (typeof touchControls.setPaused === 'function') touchControls.setPaused(isPaused);
 }
 
 // Network packet handler
@@ -564,7 +568,11 @@ function gameUpdate() {
     screenShake = Math.max(0, screenShake - dt * 25);
   }
 
-  setTouchContext(currentScreen === SCREEN.FIGHT ? 'fight' : 'menu');
+  setTouchContext(
+    currentScreen === SCREEN.FIGHT ? 'fight' : 'menu',
+    currentScreen === SCREEN.FIGHT && (gameMode === '1P' || gameMode === 'TRAIN'),
+    paused
+  );
 
   // State Updates
   switch (currentScreen) {
@@ -582,7 +590,10 @@ function gameUpdate() {
       break;
     case SCREEN.FIGHT:
       if (updatePauseState()) {
-        if (gamepadManager.wasButtonPressed(0, 'kick')) {
+        if (
+          gamepadManager.wasButtonPressed(0, 'kick') ||
+          touchControls.wasAction('pauseMenu')
+        ) {
           paused = false;
           currentScreen = SCREEN.CHAR_SELECT;
           p1Confirmed = false;
@@ -613,7 +624,12 @@ function updatePauseState() {
     return false;
   }
 
-  if (wasKeyPressed('Escape') || gamepadManager.wasButtonPressed(0, 'start') || gamepadManager.wasButtonPressed(1, 'start')) {
+  if (
+    wasKeyPressed('Escape') ||
+    gamepadManager.wasButtonPressed(0, 'start') ||
+    gamepadManager.wasButtonPressed(1, 'start') ||
+    touchControls.wasAction('pause')
+  ) {
     paused = !paused;
     arcadeAudio.menuSelect();
   } else if (!paused && gamepadManager.wasButtonPressed(0, 'kick')) {
@@ -1443,7 +1459,7 @@ function renderPauseOverlay(ctx) {
   ctx.font = 'bold 48px "Segoe UI", Roboto, sans-serif';
   ctx.fillText('PAUSADO', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
   ctx.font = '20px monospace';
-  ctx.fillText('ESC / START: continuar   VOLTAR: menu de personagens', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 50);
+  ctx.fillText('ESC / START / CONTINUAR: retomar   B / MENU: personagens', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 50);
   ctx.restore();
 }
 

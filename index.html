@@ -338,6 +338,14 @@
       if (document.webkitExitFullscreen) return Promise.resolve(document.webkitExitFullscreen());
       return Promise.reject(new Error('Fullscreen API não suportada.'));
     };
+    const syncFullscreenLayout = () => {
+      document.documentElement.classList.toggle('fullscreen-active', !!getFullscreenElement());
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+      });
+    };
+    document.addEventListener('fullscreenchange', syncFullscreenLayout);
+    document.addEventListener('webkitfullscreenchange', syncFullscreenLayout);
 
     const btnFullscreen = document.getElementById('btn-fullscreen');
     btnFullscreen.addEventListener('click', () => {
@@ -351,6 +359,7 @@
         });
       }
     });
+    syncFullscreenLayout();
 
     // PWA Install Prompt Handler (header button + portrait overlay CTA share the same prompt)
     let deferredPrompt = null;
