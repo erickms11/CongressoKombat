@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Congresso Kombat: Luta pelo Poder (10 Personagens & PWA)</title>
   <meta name="description" content="Jogo de luta estilo Street Fighter com sátira de políticos brasileiros usando LittleJS engine. Suporte a controle de Xbox, Touch Mobile e PWA offline.">
-  <meta name="theme-color" content="#e74c3c">
+  <meta name="theme-color" content="#000000">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,7 +15,11 @@
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="style.css">
   <script>
-    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) {
+    if (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      navigator.standalone === true
+    ) {
       document.documentElement.classList.add('pwa-update-check');
     }
   </script>
@@ -322,13 +326,29 @@
     });
 
     // Fullscreen Toggle
+    const getFullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+    const requestPageFullscreen = () => {
+      const root = document.documentElement;
+      if (root.requestFullscreen) return root.requestFullscreen({ navigationUI: 'hide' });
+      if (root.webkitRequestFullscreen) return Promise.resolve(root.webkitRequestFullscreen());
+      return Promise.reject(new Error('Fullscreen API não suportada.'));
+    };
+    const exitPageFullscreen = () => {
+      if (document.exitFullscreen) return document.exitFullscreen();
+      if (document.webkitExitFullscreen) return Promise.resolve(document.webkitExitFullscreen());
+      return Promise.reject(new Error('Fullscreen API não suportada.'));
+    };
+
     const btnFullscreen = document.getElementById('btn-fullscreen');
     btnFullscreen.addEventListener('click', () => {
-      const el = document.getElementById('screen-container');
-      if (!document.fullscreenElement) {
-        el.requestFullscreen().catch(() => {});
+      if (!getFullscreenElement()) {
+        requestPageFullscreen().catch((error) => {
+          console.warn('[PWA] Não foi possível entrar em tela cheia:', error);
+        });
       } else {
-        document.exitFullscreen().catch(() => {});
+        exitPageFullscreen().catch((error) => {
+          console.warn('[PWA] Não foi possível sair da tela cheia:', error);
+        });
       }
     });
 
@@ -341,7 +361,22 @@
     const rotateInstallOther = document.getElementById('rotate-install-other');
     const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      navigator.standalone === true;
+
+    const requestInstalledPwaFullscreen = async () => {
+      if (!isStandalone || getFullscreenElement()) return;
+      try {
+        await requestPageFullscreen();
+      } catch (error) {
+        console.info('[PWA] O sistema manteve a interface nativa fora do modo fullscreen:', error);
+      }
+    };
+
+    ['pointerup', 'keydown'].forEach((type) => {
+      window.addEventListener(type, requestInstalledPwaFullscreen, { once: true, capture: true });
+    });
 
     const syncInstallUI = () => {
       const hasPrompt = !!deferredPrompt;

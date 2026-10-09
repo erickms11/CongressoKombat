@@ -1,6 +1,6 @@
 // sw.js - Service Worker for Congresso Kombat PWA
 // Increment this version on every release so installed PWAs must refresh their app shell.
-const CACHE_NAME = 'congresso-kombat-v3';
+const CACHE_NAME = 'congresso-kombat-v4';
 
 const STATIC_ASSETS = [
   './',
