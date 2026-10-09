@@ -230,14 +230,15 @@ function getPlayerInputs(playerNum) {
 
 // Check single menu action from Keyboard, Xbox controller, or Touch Controls
 function checkMenuAction(playerIndex, action) {
-  // Em 2P, setas são exclusivas do P2 nos menus
-  const solo = gameMode !== '2P';
+  // Em 2P, setas são exclusivas do P2 apenas em telas onde P2 é consultado (não em TITLE/MODE_SELECT)
+  const p2Consulted = gameMode === '2P' && currentScreen !== SCREEN.TITLE && currentScreen !== SCREEN.MODE_SELECT;
+  const solo = !p2Consulted;
   if (playerIndex === 0) {
     if (action === 'up') return wasKeyPressed('KeyW') || (solo && wasKeyPressed('ArrowUp')) || gamepadManager.wasButtonPressed(0, 'up') || touchControls.wasAction('up');
     if (action === 'down') return wasKeyPressed('KeyS') || (solo && wasKeyPressed('ArrowDown')) || gamepadManager.wasButtonPressed(0, 'down') || touchControls.wasAction('down');
     if (action === 'left') return wasKeyPressed('KeyA') || (solo && wasKeyPressed('ArrowLeft')) || gamepadManager.wasButtonPressed(0, 'left') || touchControls.wasAction('left');
     if (action === 'right') return wasKeyPressed('KeyD') || (solo && wasKeyPressed('ArrowRight')) || gamepadManager.wasButtonPressed(0, 'right') || touchControls.wasAction('right');
-    if (action === 'confirm') return wasKeyPressed('Enter') || wasKeyPressed('Space') || wasKeyPressed('KeyJ') || gamepadManager.wasButtonPressed(0, 'punchLight') || gamepadManager.wasButtonPressed(0, 'start') || touchControls.wasAction('confirm');
+    if (action === 'confirm') return wasKeyPressed('Enter') || (!p2Consulted && wasKeyPressed('Space')) || wasKeyPressed('KeyJ') || gamepadManager.wasButtonPressed(0, 'punchLight') || gamepadManager.wasButtonPressed(0, 'start') || touchControls.wasAction('confirm');
     if (action === 'back') return wasKeyPressed('Escape') || gamepadManager.wasButtonPressed(0, 'kick') || touchControls.wasAction('back');
   } else {
     if (action === 'up') return wasKeyPressed('ArrowUp') || wasKeyPressed('Numpad8') || gamepadManager.wasButtonPressed(1, 'up');
@@ -310,6 +311,10 @@ function handleNetworkData(data) {
     if (data.screen === SCREEN.MATCH_OVER && currentScreen !== SCREEN.MATCH_OVER) {
       matchWinner = data.winner === 1 ? player1 : player2;
       currentScreen = SCREEN.MATCH_OVER;
+    } else if (data.screen === SCREEN.CHAR_SELECT && currentScreen === SCREEN.MATCH_OVER) {
+      p1Confirmed = false;
+      p2Confirmed = false;
+      currentScreen = SCREEN.CHAR_SELECT;
     }
 
     // Sync projectiles visually
@@ -954,10 +959,18 @@ function updateFight(dt) {
     }
 
     if (gameMode === 'TRAIN') {
-      player1.hp = player1.maxHp;
-      player1.displayHp = player1.maxHp;
-      player2.hp = player2.maxHp;
-      player2.displayHp = player2.maxHp;
+      for (const f of [player1, player2]) {
+        f.hp = f.maxHp;
+        f.displayHp = f.maxHp;
+        if (f.state === FIGHTER_STATE.DEFEAT) {
+          // Recuperação: knockdown com física válida (mesmo caminho de golpe pesado), sem KO
+          f.state = FIGHTER_STATE.KNOCKDOWN;
+          f.stateTimer = 0;
+          f.vy = -200;
+          f.isGrounded = false;
+          f.invulnerableTimer = 0.8;
+        }
+      }
       player1.superMeter = 100;
     }
 
@@ -1033,11 +1046,14 @@ function timeOver() {
 
 // --- MATCH OVER SCREEN ---
 function updateMatchOver() {
+  // Online: apenas o host decide saída/revanche; o cliente aguarda o sync
+  if (gameMode === 'ONLINE' && !networkManager.isHost) return;
   if (checkMenuAction(0, 'confirm') || checkMenuAction(0, 'back')) {
     arcadeAudio.menuConfirm();
     p1Confirmed = false;
     p2Confirmed = false;
     currentScreen = SCREEN.CHAR_SELECT;
+    broadcastOnlineSync();
   }
 }
 
