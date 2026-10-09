@@ -177,15 +177,17 @@ function getPlayerInputs(playerNum) {
   const tc = (playerNum === 1) ? touchControls.getInputs() : {};
 
   if (playerNum === 1) {
-    const kbLeft = keys['KeyA'] || keys['ArrowLeft'];
-    const kbRight = keys['KeyD'] || keys['ArrowRight'];
-    const kbUp = keys['KeyW'] || keys['ArrowUp'];
-    const kbDown = keys['KeyS'] || keys['ArrowDown'];
-    const kbPunchL = keys['KeyJ'] || keys['KeyZ'];
-    const kbPunchH = keys['KeyK'] || keys['KeyX'];
-    const kbKick = keys['KeyL'] || keys['KeyC'];
-    const kbSpecial = keys['KeyU'] || keys['KeyV'];
-    const kbSuper = keys['KeyI'] || keys['Space'];
+    // Em 2P, P1 usa só WASD+JKLUI para não colidir com P2 (setas/ZXCV/Espaço)
+    const solo = gameMode !== '2P';
+    const kbLeft = keys['KeyA'] || (solo && keys['ArrowLeft']);
+    const kbRight = keys['KeyD'] || (solo && keys['ArrowRight']);
+    const kbUp = keys['KeyW'] || (solo && keys['ArrowUp']);
+    const kbDown = keys['KeyS'] || (solo && keys['ArrowDown']);
+    const kbPunchL = keys['KeyJ'] || (solo && keys['KeyZ']);
+    const kbPunchH = keys['KeyK'] || (solo && keys['KeyX']);
+    const kbKick = keys['KeyL'] || (solo && keys['KeyC']);
+    const kbSpecial = keys['KeyU'] || (solo && keys['KeyV']);
+    const kbSuper = keys['KeyI'] || (solo && keys['Space']);
 
     return {
       left: kbLeft || gp.left || tc.left,
@@ -200,16 +202,16 @@ function getPlayerInputs(playerNum) {
       start: keys['Enter'] || gp.start || tc.start
     };
   } else {
-    // Player 2 controls (Keyboard Numpad/Alt + Gamepad 1)
-    const kbLeft = keys['Numpad4'] || keys['KeyG'];
-    const kbRight = keys['Numpad6'] || keys['KeyJ'];
-    const kbUp = keys['Numpad8'] || keys['KeyY'];
-    const kbDown = keys['Numpad5'] || keys['KeyH'];
-    const kbPunchL = keys['Numpad1'] || keys['KeyB'];
-    const kbPunchH = keys['Numpad2'] || keys['KeyN'];
-    const kbKick = keys['Numpad3'] || keys['KeyM'];
-    const kbSpecial = keys['Numpad0'] || keys['KeyO'];
-    const kbSuper = keys['NumpadEnter'] || keys['KeyP'];
+    // Player 2 controls (Setas+ZXCV/Espaço, Numpad + Gamepad 1)
+    const kbLeft = keys['ArrowLeft'] || keys['Numpad4'];
+    const kbRight = keys['ArrowRight'] || keys['Numpad6'];
+    const kbUp = keys['ArrowUp'] || keys['Numpad8'];
+    const kbDown = keys['ArrowDown'] || keys['Numpad5'];
+    const kbPunchL = keys['KeyZ'] || keys['Numpad1'];
+    const kbPunchH = keys['KeyX'] || keys['Numpad2'];
+    const kbKick = keys['KeyC'] || keys['Numpad3'];
+    const kbSpecial = keys['KeyV'] || keys['Numpad0'];
+    const kbSuper = keys['Space'] || keys['NumpadEnter'];
 
     return {
       left: kbLeft || gp.left,
@@ -228,22 +230,34 @@ function getPlayerInputs(playerNum) {
 
 // Check single menu action from Keyboard, Xbox controller, or Touch Controls
 function checkMenuAction(playerIndex, action) {
+  // Em 2P, setas são exclusivas do P2 apenas em telas onde P2 é consultado (não em TITLE/MODE_SELECT)
+  const p2Consulted = gameMode === '2P' && currentScreen !== SCREEN.TITLE && currentScreen !== SCREEN.MODE_SELECT;
+  const solo = !p2Consulted;
   if (playerIndex === 0) {
-    if (action === 'up') return wasKeyPressed('ArrowUp') || wasKeyPressed('KeyW') || gamepadManager.wasButtonPressed(0, 'up') || touchControls.wasAction('up');
-    if (action === 'down') return wasKeyPressed('ArrowDown') || wasKeyPressed('KeyS') || gamepadManager.wasButtonPressed(0, 'down') || touchControls.wasAction('down');
-    if (action === 'left') return wasKeyPressed('ArrowLeft') || wasKeyPressed('KeyA') || gamepadManager.wasButtonPressed(0, 'left') || touchControls.wasAction('left');
-    if (action === 'right') return wasKeyPressed('ArrowRight') || wasKeyPressed('KeyD') || gamepadManager.wasButtonPressed(0, 'right') || touchControls.wasAction('right');
-    if (action === 'confirm') return wasKeyPressed('Enter') || wasKeyPressed('Space') || wasKeyPressed('KeyJ') || gamepadManager.wasButtonPressed(0, 'punchLight') || gamepadManager.wasButtonPressed(0, 'start') || touchControls.wasAction('confirm');
+    if (action === 'up') return wasKeyPressed('KeyW') || (solo && wasKeyPressed('ArrowUp')) || gamepadManager.wasButtonPressed(0, 'up') || touchControls.wasAction('up');
+    if (action === 'down') return wasKeyPressed('KeyS') || (solo && wasKeyPressed('ArrowDown')) || gamepadManager.wasButtonPressed(0, 'down') || touchControls.wasAction('down');
+    if (action === 'left') return wasKeyPressed('KeyA') || (solo && wasKeyPressed('ArrowLeft')) || gamepadManager.wasButtonPressed(0, 'left') || touchControls.wasAction('left');
+    if (action === 'right') return wasKeyPressed('KeyD') || (solo && wasKeyPressed('ArrowRight')) || gamepadManager.wasButtonPressed(0, 'right') || touchControls.wasAction('right');
+    if (action === 'confirm') return wasKeyPressed('Enter') || (!p2Consulted && wasKeyPressed('Space')) || wasKeyPressed('KeyJ') || gamepadManager.wasButtonPressed(0, 'punchLight') || gamepadManager.wasButtonPressed(0, 'start') || touchControls.wasAction('confirm');
     if (action === 'back') return wasKeyPressed('Escape') || gamepadManager.wasButtonPressed(0, 'kick') || touchControls.wasAction('back');
   } else {
-    if (action === 'up') return wasKeyPressed('Numpad8') || wasKeyPressed('KeyY') || gamepadManager.wasButtonPressed(1, 'up');
-    if (action === 'down') return wasKeyPressed('Numpad5') || wasKeyPressed('KeyH') || gamepadManager.wasButtonPressed(1, 'down');
-    if (action === 'left') return wasKeyPressed('Numpad4') || wasKeyPressed('KeyG') || gamepadManager.wasButtonPressed(1, 'left');
-    if (action === 'right') return wasKeyPressed('Numpad6') || wasKeyPressed('KeyJ') || gamepadManager.wasButtonPressed(1, 'right');
-    if (action === 'confirm') return wasKeyPressed('NumpadEnter') || wasKeyPressed('KeyB') || gamepadManager.wasButtonPressed(1, 'punchLight') || gamepadManager.wasButtonPressed(1, 'start');
+    if (action === 'up') return wasKeyPressed('ArrowUp') || wasKeyPressed('Numpad8') || gamepadManager.wasButtonPressed(1, 'up');
+    if (action === 'down') return wasKeyPressed('ArrowDown') || wasKeyPressed('Numpad5') || gamepadManager.wasButtonPressed(1, 'down');
+    if (action === 'left') return wasKeyPressed('ArrowLeft') || wasKeyPressed('Numpad4') || gamepadManager.wasButtonPressed(1, 'left');
+    if (action === 'right') return wasKeyPressed('ArrowRight') || wasKeyPressed('Numpad6') || gamepadManager.wasButtonPressed(1, 'right');
+    if (action === 'confirm') return wasKeyPressed('NumpadEnter') || wasKeyPressed('KeyZ') || gamepadManager.wasButtonPressed(1, 'punchLight') || gamepadManager.wasButtonPressed(1, 'start');
     if (action === 'back') return gamepadManager.wasButtonPressed(1, 'kick');
   }
   return false;
+}
+
+// Touch contract: setContext('menu'|'select'|'fight') and wasAction('back'|'start')
+function touchAction(action) {
+  return typeof touchControls.wasAction === 'function' && touchControls.wasAction(action);
+}
+
+function setTouchContext(context) {
+  if (typeof touchControls.setContext === 'function') touchControls.setContext(context);
 }
 
 // Network packet handler
@@ -294,6 +308,14 @@ function handleNetworkData(data) {
     if (data.roundState !== undefined) roundState = data.roundState;
     if (data.roundStateTimer !== undefined) roundStateTimer = data.roundStateTimer;
     if (data.currentRound !== undefined) currentRound = data.currentRound;
+    if (data.screen === SCREEN.MATCH_OVER && currentScreen !== SCREEN.MATCH_OVER) {
+      matchWinner = data.winner === 1 ? player1 : player2;
+      currentScreen = SCREEN.MATCH_OVER;
+    } else if (data.screen === SCREEN.CHAR_SELECT && currentScreen === SCREEN.MATCH_OVER) {
+      p1Confirmed = false;
+      p2Confirmed = false;
+      currentScreen = SCREEN.CHAR_SELECT;
+    }
 
     // Sync projectiles visually
     if (data.projs) {
@@ -544,6 +566,8 @@ function gameUpdate() {
     screenShake = Math.max(0, screenShake - dt * 25);
   }
 
+  setTouchContext(currentScreen === SCREEN.CHAR_SELECT ? 'select' : (currentScreen === SCREEN.FIGHT ? 'fight' : 'menu'));
+
   // State Updates
   switch (currentScreen) {
     case SCREEN.TITLE:
@@ -559,7 +583,17 @@ function gameUpdate() {
       updateVersusScreen(dt);
       break;
     case SCREEN.FIGHT:
-      updateFight(dt);
+      if (updatePauseState()) {
+        if (touchAction('back') || gamepadManager.wasButtonPressed(0, 'kick')) {
+          paused = false;
+          currentScreen = SCREEN.CHAR_SELECT;
+          p1Confirmed = false;
+          p2Confirmed = false;
+          arcadeAudio.menuSelect();
+        }
+      } else {
+        updateFight(dt);
+      }
       break;
     case SCREEN.MATCH_OVER:
       updateMatchOver();
@@ -570,6 +604,26 @@ function gameUpdate() {
   for (const k in keys) {
     prevKeys[k] = keys[k];
   }
+  touchControls.endFrame();
+}
+
+// Pausa local: Escape/Start/touch alternam; nunca ativa no ONLINE
+let paused = false;
+function updatePauseState() {
+  if (gameMode === 'ONLINE') {
+    paused = false;
+    return false;
+  }
+
+  if (wasKeyPressed('Escape') || gamepadManager.wasButtonPressed(0, 'start') || gamepadManager.wasButtonPressed(1, 'start') || touchAction('start')) {
+    paused = !paused;
+    arcadeAudio.menuSelect();
+  } else if (!paused && (touchAction('back') || gamepadManager.wasButtonPressed(0, 'kick'))) {
+    // Voltar durante a luta abre a pausa
+    paused = true;
+    arcadeAudio.menuSelect();
+  }
+  return paused;
 }
 
 // --- TITLE SCREEN ---
@@ -626,6 +680,10 @@ function updateModeSelect() {
     p1Confirmed = false;
     p2Confirmed = false;
     currentScreen = SCREEN.CHAR_SELECT;
+  }
+  if (checkMenuAction(0, 'back')) {
+    currentScreen = SCREEN.TITLE;
+    arcadeAudio.menuSelect();
   }
 }
 
@@ -723,6 +781,10 @@ function updateCharSelect() {
       p2SelectIndex = (p1SelectIndex < 5) ? 5 : 0;
       p2Confirmed = false;
     }
+    if (checkMenuAction(0, 'back')) {
+      currentScreen = SCREEN.MODE_SELECT;
+      arcadeAudio.menuSelect();
+    }
     return;
   }
 
@@ -798,7 +860,7 @@ function startNewMatch() {
     x: 930,
     groundY: ARENA_GROUND_Y,
     facing: -1,
-    isCpu: (gameMode === '1P' || gameMode === 'TRAIN'),
+    isCpu: (gameMode === '1P'),
     playerNum: 2,
     difficulty: (gameMode === 'TRAIN') ? 'EASY' : (GAME_SETTINGS.difficulty || 'NORMAL')
   });
@@ -808,6 +870,7 @@ function startNewMatch() {
 
   projectiles = [];
   particleSystem.clear();
+  paused = false;
 
   startRound();
   currentScreen = SCREEN.FIGHT;
@@ -830,6 +893,18 @@ function startRound() {
 
 // --- FIGHT SCREEN UPDATE ---
 function updateFight(dt) {
+  if (gameMode === 'ONLINE' && !networkManager.isHost) {
+    // Client only sends input and animates; timer/KO/round flow come from Host sync
+    networkManager.send({
+      type: 'client_input',
+      inputs: getPlayerInputs(1)
+    });
+    particleSystem.update(dt);
+    player1.animFrame += dt * 8;
+    player2.animFrame += dt * 8;
+    return;
+  }
+
   particleSystem.update(dt);
 
   // Update projectiles
@@ -857,6 +932,7 @@ function updateFight(dt) {
         matchTimer--;
         if (matchTimer <= 0) {
           timeOver();
+          broadcastOnlineSync();
           return;
         }
       }
@@ -867,44 +943,35 @@ function updateFight(dt) {
     let p2Inputs = null;
 
     if (gameMode === 'ONLINE') {
-      if (networkManager.isHost) {
-        // Host controls Player 1, remote client controls Player 2
-        p1Inputs = getPlayerInputs(1);
-        p2Inputs = remoteClientInputs;
+      // Host controls Player 1, remote client controls Player 2
+      p1Inputs = getPlayerInputs(1);
+      p2Inputs = remoteClientInputs;
 
-        player1.update(dt, CANVAS_WIDTH, projectiles, p1Inputs);
-        player2.update(dt, CANVAS_WIDTH, projectiles, p2Inputs);
-
-        // Host streams authoritative physics state to Client
-        networkManager.send({
-          type: 'sync',
-          p1: { x: player1.x, y: player1.y, hp: player1.hp, displayHp: player1.displayHp, state: player1.state, facing: player1.facing, superMeter: player1.superMeter, roundsWon: player1.roundsWon, animFrame: player1.animFrame },
-          p2: { x: player2.x, y: player2.y, hp: player2.hp, displayHp: player2.displayHp, state: player2.state, facing: player2.facing, superMeter: player2.superMeter, roundsWon: player2.roundsWon, animFrame: player2.animFrame },
-          matchTimer,
-          roundState,
-          roundStateTimer,
-          currentRound,
-          projs: projectiles.map(p => ({ x: p.x, y: p.y, vx: p.vx, type: p.type, color: p.color, radius: p.radius, alive: p.alive }))
-        });
-      } else {
-        // Client streams local inputs to Host
-        const myClientInputs = getPlayerInputs(1); // Client uses local P1/gamepad layout
-        networkManager.send({
-          type: 'client_input',
-          inputs: myClientInputs
-        });
-
-        // Client updates animations smoothly between sync ticks
-        player1.animFrame += dt * 8;
-        player2.animFrame += dt * 8;
-      }
+      player1.update(dt, CANVAS_WIDTH, projectiles, p1Inputs);
+      player2.update(dt, CANVAS_WIDTH, projectiles, p2Inputs);
     } else {
-      // Local 1P vs CPU, 2P local, or Training
+      // Local 1P vs CPU, 2P local, or Training (dummy passivo: P2 sem inputs)
       p1Inputs = getPlayerInputs(1);
       p2Inputs = gameMode === '2P' ? getPlayerInputs(2) : null;
 
       player1.update(dt, CANVAS_WIDTH, projectiles, p1Inputs);
       player2.update(dt, CANVAS_WIDTH, projectiles, p2Inputs);
+    }
+
+    if (gameMode === 'TRAIN') {
+      for (const f of [player1, player2]) {
+        f.hp = f.maxHp;
+        f.displayHp = f.maxHp;
+        if (f.state === FIGHTER_STATE.DEFEAT) {
+          // Recuperação: knockdown com física válida (mesmo caminho de golpe pesado), sem KO
+          f.state = FIGHTER_STATE.KNOCKDOWN;
+          f.stateTimer = 0;
+          f.vy = -200;
+          f.isGrounded = false;
+          f.invulnerableTimer = 0.8;
+        }
+      }
+      player1.superMeter = 100;
     }
 
     // Check KO
@@ -939,6 +1006,26 @@ function updateFight(dt) {
       }
     }
   }
+
+  broadcastOnlineSync();
+}
+
+// Host envia o estado autoritativo (round, KO, próximo round, MATCH_OVER) ao cliente
+function broadcastOnlineSync() {
+  if (gameMode !== 'ONLINE' || !networkManager.isHost) return;
+
+  networkManager.send({
+    type: 'sync',
+    screen: currentScreen,
+    winner: matchWinner === player1 ? 1 : (matchWinner === player2 ? 2 : 0),
+    p1: { x: player1.x, y: player1.y, hp: player1.hp, displayHp: player1.displayHp, state: player1.state, facing: player1.facing, superMeter: player1.superMeter, roundsWon: player1.roundsWon, animFrame: player1.animFrame },
+    p2: { x: player2.x, y: player2.y, hp: player2.hp, displayHp: player2.displayHp, state: player2.state, facing: player2.facing, superMeter: player2.superMeter, roundsWon: player2.roundsWon, animFrame: player2.animFrame },
+    matchTimer,
+    roundState,
+    roundStateTimer,
+    currentRound,
+    projs: projectiles.map(p => ({ x: p.x, y: p.y, vx: p.vx, type: p.type, color: p.color, radius: p.radius, alive: p.alive }))
+  });
 }
 
 function timeOver() {
@@ -959,11 +1046,14 @@ function timeOver() {
 
 // --- MATCH OVER SCREEN ---
 function updateMatchOver() {
-  if (checkMenuAction(0, 'confirm')) {
+  // Online: apenas o host decide saída/revanche; o cliente aguarda o sync
+  if (gameMode === 'ONLINE' && !networkManager.isHost) return;
+  if (checkMenuAction(0, 'confirm') || checkMenuAction(0, 'back')) {
     arcadeAudio.menuConfirm();
     p1Confirmed = false;
     p2Confirmed = false;
     currentScreen = SCREEN.CHAR_SELECT;
+    broadcastOnlineSync();
   }
 }
 
@@ -993,6 +1083,7 @@ function gameRender() {
       break;
     case SCREEN.FIGHT:
       renderFightScreen(ctx);
+      if (paused) renderPauseOverlay(ctx);
       break;
     case SCREEN.MATCH_OVER:
       renderMatchOverScreen(ctx);
@@ -1341,6 +1432,19 @@ function renderVersusScreen(ctx) {
   ctx.fillText(char2.side, 970, 635);
 }
 
+function renderPauseOverlay(ctx) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 48px "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('PAUSADO', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+  ctx.font = '20px monospace';
+  ctx.fillText('ESC / START: continuar   VOLTAR: menu de personagens', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 50);
+  ctx.restore();
+}
+
 function renderFightScreen(ctx) {
   if (images.bg_congress && images.bg_congress.complete) {
     ctx.drawImage(images.bg_congress, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -1416,7 +1520,7 @@ function renderHUD(ctx) {
   ctx.fillRect(47, 667, p1SuperWidth, 16);
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 12px sans-serif';
-  ctx.fillText(player1.superMeter >= 100 ? '★ PODER PRONTO! [ESPAÇO / RB]' : `CPI: ${Math.floor(player1.superMeter)}%`, 55, 680);
+  ctx.fillText(player1.superMeter >= 100 ? '★ PODER PRONTO! [I / RB]' : `CPI: ${Math.floor(player1.superMeter)}%`, 55, 680);
 
   // P2 Health Bar
   const p2X = CANVAS_WIDTH - 130 - barWidth;

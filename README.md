@@ -77,9 +77,12 @@ Também é possível ajustar o **Tempo de Round (60s, 99s ou Infinito)** e salva
 | **Chute** | Botão `LK` (Laranja) |
 | **Golpe Especial** | Botão `SP` (Amarelo) |
 | **Super CPI (100%)** | Botão `SUPER` (Vermelho) |
-| **Pausa / Menu** | Botão `⏸ PAUSE` ou `⮌ BACK` (Topo direito) |
+| **Botão superior (touch)** | Na seleção: `SELECIONAR` / `CONFIRMAR`. Na luta: `⏸ PAUSE` (Topo direito) |
+| **Voltar** | `⮌ BACK` (Topo direito): navega Oponente → Personagem → Modos → Título |
 
 *Dica no Celular:* Você também pode **tocar diretamente nas cartas dos políticos** na tela de seleção para escolhê-los!
+
+*Celular em retrato:* o jogo pede para **girar o aparelho para paisagem** e para **instalar o PWA** (veja a seção de PWA abaixo).
 
 ---
 
@@ -94,7 +97,7 @@ Também é possível ajustar o **Tempo de Round (60s, 99s ou Infinito)** e salva
 | **Chute** | Botão `B` (Vermelho) / Cancela Menus |
 | **Golpe Especial** | Botão `Y` (Amarelo) |
 | **Super CPI (100%)** | `RB` (Right Bumper) ou `RT` (Right Trigger) |
-| **Start / Pausa** | Botão `Menu / Start` |
+| **Start / Pausa** | Botão `Menu / Start` (pausa somente em partidas locais) |
 
 ---
 
@@ -108,12 +111,27 @@ Também é possível ajustar o **Tempo de Round (60s, 99s ou Infinito)** e salva
 - **Golpe Especial:** `U` (ou `V`)
 - **Super CPI (100%):** `I` ou `Barra de Espaço`
 
+*No modo 2P (Versus Local), o Jogador 1 usa apenas `WASD` + `J` / `K` / `L` / `U` / `I`.*
+
 ### ⌨️ Teclado (Jogador 2 - Versus Local):
-- **Andar:** `4` / `6` (Numpad) ou `G` / `J`
-- **Pular:** `8` (Numpad) ou `Y`
-- **Agachar:** `5` (Numpad) ou `H`
-- **Socos & Chute:** `1`, `2`, `3` (Numpad) ou `B`, `N`, `M`
-- **Especial & Super:** `0` (Numpad) ou `O` / `Enter` (Numpad) ou `P`
+- **Andar:** `Setas Esquerda / Direita` ou `Numpad`
+- **Pular:** `Seta Cima`
+- **Agachar / Bloquear:** `Seta Baixo`
+- **Soco Rápido:** `Z`
+- **Soco Forte:** `X`
+- **Chute:** `C`
+- **Golpe Especial:** `V`
+- **Super CPI (100%):** `Barra de Espaço` ou `Numpad`
+
+### 🥋 Treino Passivo
+- Tempo de round e vida do lutador são **infinitos**.
+- O **Super CPI** fica **sempre disponível**.
+- Ideal para testar combos e golpes sem pressão.
+
+### ⏸ Pausa e Voltar
+- A **pausa é local**: só funciona em partidas locais (Versus Local).
+- Em uma luta local, o botão **Voltar** pausa o jogo em vez de sair.
+- O botão **Voltar** navega: Oponente → Personagem → Modos → Título.
 
 ---
 
@@ -123,6 +141,7 @@ O jogo funciona como um **Progressive Web App**:
 - **Android (Chrome):** Toque no botão **⬇ Instalar App** ou nas opções do navegador para fixar na tela inicial com ícone próprio.
 - **iOS (Safari):** Toque em *Compartilhar* ➔ *Adicionar à Tela de Início*.
 - **Offline:** Permite jogar mesmo sem internet graças ao Service Worker integrado.
+- **Celular em retrato:** o jogo pede para girar o aparelho para paisagem e para instalar o PWA.
 
 ---
 

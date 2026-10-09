@@ -27,8 +27,12 @@ class TouchControls {
       left: false,
       right: false,
       confirm: false,
-      back: false
+      back: false,
+      start: false
     };
+
+    // Context of the START button: 'menu' | 'select' | 'fight'
+    this.context = 'menu';
 
     this.activeTouches = new Map(); // identifier -> button key
     this.container = null;
@@ -47,15 +51,52 @@ class TouchControls {
       this.enabled = this.isTouchDevice;
     }
 
+    this.bindFocusGuards();
     this.createDOM();
     this.updateVisibility();
   }
 
   toggle() {
-    this.enabled = !this.enabled;
+    this.setEnabled(!this.enabled);
     localStorage.setItem('ck_touch_controls', this.enabled);
-    this.updateVisibility();
     return this.enabled;
+  }
+
+  // Enables/disables the overlay. Disabling releases every held or pulsed state.
+  setEnabled(flag) {
+    this.enabled = !!flag;
+    if (!this.enabled) this.releaseAll();
+    this.updateVisibility();
+  }
+
+  // Sets the START button meaning: 'menu' -> SELECIONAR, 'select' -> CONFIRMAR, 'fight' -> PAUSE.
+  setContext(context) {
+    const labels = { menu: 'SELECIONAR', select: 'CONFIRMAR', fight: 'PAUSE' };
+    if (!labels[context]) return;
+    this.context = context;
+    const label = this.container?.querySelector('#touch-start-label');
+    if (label) label.textContent = labels[context];
+    const btn = this.container?.querySelector('[data-key="start"]');
+    if (btn) btn.title = labels[context];
+  }
+
+  // Clears all held states, pulses and visual 'active' classes (stuck-state guard).
+  releaseAll() {
+    for (const key of Object.keys(this.state)) this.state[key] = false;
+    for (const key of Object.keys(this.actionPulses)) this.actionPulses[key] = false;
+    this.activeTouches.clear();
+    if (this.container) {
+      this.container.querySelectorAll('.active').forEach((el) => el.classList.remove('active'));
+    }
+  }
+
+  bindFocusGuards() {
+    const release = () => this.releaseAll();
+    window.addEventListener('blur', release);
+    window.addEventListener('pagehide', release);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) release();
+    });
   }
 
   triggerHaptic(ms = 15) {
@@ -79,8 +120,8 @@ class TouchControls {
         <button type="button" class="touch-btn touch-btn-util" data-key="back" title="Voltar / Cancelar">
           <span>⮌ BACK</span>
         </button>
-        <button type="button" class="touch-btn touch-btn-util" data-key="start" title="Pausa / Confirmar">
-          <span>⏸ PAUSE</span>
+        <button type="button" class="touch-btn touch-btn-util" data-key="start" title="PAUSE">
+        <span id="touch-start-label">PAUSE</span>
         </button>
       </div>
 
@@ -139,6 +180,7 @@ class TouchControls {
     this.container = wrapper;
 
     this.bindTouchEvents();
+    this.setContext(this.context);
   }
 
   bindTouchEvents() {
@@ -160,6 +202,10 @@ class TouchControls {
         e.stopPropagation();
         this.setButtonState(key, false);
         btn.classList.remove('active');
+        // Re-derive D-Pad directions from the touches still on the pad
+        if (key === 'up' || key === 'down' || key === 'left' || key === 'right') {
+          this.syncDpadFromTouches(e.touches || []);
+        }
       };
 
       btn.addEventListener('touchstart', handlePress, { passive: false });
@@ -178,58 +224,63 @@ class TouchControls {
       const handleDpadMove = (e) => {
         if (!e.touches) return;
         e.preventDefault();
-
-        // Calculate touch coordinates relative to d-pad center
-        const rect = dpad.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-
-        for (let i = 0; i < e.touches.length; i++) {
-          const t = e.touches[i];
-          if (
-            t.clientX >= rect.left - 15 &&
-            t.clientX <= rect.right + 15 &&
-            t.clientY >= rect.top - 15 &&
-            t.clientY <= rect.bottom + 15
-          ) {
-            const dx = t.clientX - centerX;
-            const dy = t.clientY - centerY;
-            const deadzone = 12;
-
-            this.state.left = dx < -deadzone;
-            this.state.right = dx > deadzone;
-            this.state.up = dy < -deadzone;
-            this.state.down = dy > deadzone;
-
-            // Update UI classes
-            dpad.querySelector('.dpad-left')?.classList.toggle('active', this.state.left);
-            dpad.querySelector('.dpad-right')?.classList.toggle('active', this.state.right);
-            dpad.querySelector('.dpad-up')?.classList.toggle('active', this.state.up);
-            dpad.querySelector('.dpad-down')?.classList.toggle('active', this.state.down);
-            return;
-          }
-        }
+        this.syncDpadFromTouches(e.touches);
       };
 
       dpad.addEventListener('touchmove', handleDpadMove, { passive: false });
     }
   }
 
+  // Derives D-Pad directions from the touches currently on the pad (all clear if none).
+  syncDpadFromTouches(touches) {
+    const dpad = document.getElementById('touch-dpad');
+    if (!dpad) return;
+
+    const rect = dpad.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const deadzone = 12;
+    let dir = { up: false, down: false, left: false, right: false };
+
+    for (let i = 0; i < touches.length; i++) {
+      const t = touches[i];
+      if (
+        t.clientX >= rect.left - 15 &&
+        t.clientX <= rect.right + 15 &&
+        t.clientY >= rect.top - 15 &&
+        t.clientY <= rect.bottom + 15
+      ) {
+        const dx = t.clientX - centerX;
+        const dy = t.clientY - centerY;
+        dir = {
+          left: dx < -deadzone,
+          right: dx > deadzone,
+          up: dy < -deadzone,
+          down: dy > deadzone
+        };
+        break;
+      }
+    }
+
+    for (const k of ['up', 'down', 'left', 'right']) {
+      this.state[k] = dir[k];
+      dpad.querySelector(`.dpad-${k}`)?.classList.toggle('active', dir[k]);
+    }
+  }
+
   setButtonState(key, isPressed) {
     if (key === 'back') {
-      if (isPressed) {
-        this.actionPulses.back = true;
-        this.state.kick = true; // Maps to cancel in select screen
-      } else {
-        this.state.kick = false;
-      }
+      // Back only emits a pulse; it never simulates an action button
+      if (isPressed) this.actionPulses.back = true;
       return;
     }
 
     if (key === 'start') {
       this.state.start = isPressed;
       if (isPressed) {
-        this.actionPulses.confirm = true;
+        // Menus/selection: confirm. Local fight: start (pause)
+        if (this.context === 'fight') this.actionPulses.start = true;
+        else this.actionPulses.confirm = true;
       }
       return;
     }
@@ -255,6 +306,7 @@ class TouchControls {
       this.container.classList.remove('hidden');
       this.container.style.display = 'flex';
     } else {
+      this.releaseAll();
       this.container.classList.add('hidden');
       this.container.style.display = 'none';
     }
@@ -275,6 +327,13 @@ class TouchControls {
     };
   }
 
+  // Called once per frame after game logic: pulses no screen consumed expire here,
+  // so they cannot leak into a later screen (e.g. a D-Pad press made during a fight).
+  endFrame() {
+    for (const key of Object.keys(this.actionPulses)) this.actionPulses[key] = false;
+  }
+
+  // Returns true once per pulse ('up'|'down'|'left'|'right'|'confirm'|'back'|'start')
   wasAction(action) {
     if (this.actionPulses[action]) {
       this.actionPulses[action] = false;
