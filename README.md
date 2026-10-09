@@ -143,7 +143,10 @@ O jogo funciona como um **Progressive Web App**:
 - **Android (Chrome):** Toque no botão **⬇ Instalar App** ou nas opções do navegador para fixar na tela inicial com ícone próprio.
 - **iOS (Safari):** Toque em *Compartilhar* ➔ *Adicionar à Tela de Início*.
 - **Offline:** Permite jogar mesmo sem internet graças ao Service Worker integrado.
+- **Atualização obrigatória:** ao abrir com internet, o PWA verifica, baixa e ativa uma nova versão antes de liberar o jogo. Sem conexão, abre a última versão instalada.
 - **Celular em retrato:** o jogo pede para girar o aparelho para paisagem e para instalar o PWA.
+
+> **Publicação:** incremente `CACHE_NAME` em `sw.js` em toda nova versão. Essa mudança dispara o download integral do novo app shell nos PWAs instalados.
 
 ---
 

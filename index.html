@@ -14,6 +14,11 @@
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="style.css">
+  <script>
+    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) {
+      document.documentElement.classList.add('pwa-update-check');
+    }
+  </script>
 </head>
 <body>
 
@@ -247,6 +252,15 @@
     </div>
   </div>
 
+  <div id="pwa-update-overlay" class="pwa-update-overlay" role="alertdialog" aria-modal="true" aria-labelledby="pwa-update-title" aria-describedby="pwa-update-status" tabindex="-1">
+    <div class="pwa-update-box">
+      <div class="pwa-update-spinner" aria-hidden="true"></div>
+      <h2 id="pwa-update-title" class="pwa-update-title">Atualizando o jogo</h2>
+      <p id="pwa-update-status" class="pwa-update-status" aria-live="assertive">Verificando se existe uma nova versão...</p>
+      <button id="pwa-update-retry" class="arcade-btn green-btn pwa-update-retry" type="button" hidden>Tentar novamente</button>
+    </div>
+  </div>
+
   <!-- Mobile Portrait Overlay: asks to rotate to landscape and highlights PWA install -->
   <div id="rotate-overlay" class="rotate-overlay" role="dialog" aria-modal="true" aria-labelledby="rotate-title" aria-describedby="rotate-text">
     <div id="rotate-box" class="rotate-overlay-box" tabindex="-1">
@@ -365,14 +379,21 @@
     const portraitBlockMql = window.matchMedia('(orientation: portrait) and (max-width: 900px) and (pointer: coarse)');
     const rotateOverlay = document.getElementById('rotate-overlay');
     const rotateBox = document.getElementById('rotate-box');
+    const pwaUpdateOverlay = document.getElementById('pwa-update-overlay');
+    const pwaUpdateStatus = document.getElementById('pwa-update-status');
+    const pwaUpdateRetry = document.getElementById('pwa-update-retry');
     const lockedRegions = Array.from(document.body.children).filter(
-      (el) => el !== rotateOverlay && el.tagName !== 'SCRIPT'
+      (el) => el !== rotateOverlay && el !== pwaUpdateOverlay && el.tagName !== 'SCRIPT'
     );
 
-    const applyPortraitBlock = () => {
-      const blocked = portraitBlockMql.matches;
+    const isPwaUpdateLocked = () => document.documentElement.classList.contains('pwa-update-check');
+
+    const applyInteractionBlock = () => {
+      const blocked = portraitBlockMql.matches || isPwaUpdateLocked();
       lockedRegions.forEach((el) => { el.inert = blocked; });
-      if (blocked) {
+      if (isPwaUpdateLocked()) {
+        pwaUpdateOverlay.focus({ preventScroll: true });
+      } else if (portraitBlockMql.matches) {
         syncInstallUI();
         rotateBox.focus({ preventScroll: true });
       }
@@ -380,26 +401,106 @@
 
     ['keydown', 'keyup'].forEach((type) => {
       window.addEventListener(type, (e) => {
-        if (portraitBlockMql.matches) {
+        if (portraitBlockMql.matches || isPwaUpdateLocked()) {
           e.stopImmediatePropagation();
           e.preventDefault();
         }
       }, true);
     });
 
-    portraitBlockMql.addEventListener('change', applyPortraitBlock);
+    portraitBlockMql.addEventListener('change', applyInteractionBlock);
     // Reaplica no resize/orientationchange para desbloquear inert ao girar para paisagem
-    window.addEventListener('resize', applyPortraitBlock);
-    window.addEventListener('orientationchange', applyPortraitBlock);
-    applyPortraitBlock();
+    window.addEventListener('resize', applyInteractionBlock);
+    window.addEventListener('orientationchange', applyInteractionBlock);
+    applyInteractionBlock();
 
-    // Register Service Worker for Offline PWA
+    const setPwaUpdateStatus = (message) => {
+      if (pwaUpdateStatus) pwaUpdateStatus.textContent = message;
+    };
+
+    const releasePwaUpdateLock = () => {
+      document.documentElement.classList.remove('pwa-update-check');
+      if (pwaUpdateRetry) pwaUpdateRetry.hidden = true;
+      applyInteractionBlock();
+    };
+
+    const failPwaUpdate = (error) => {
+      console.error('[PWA] Não foi possível verificar/aplicar a atualização:', error);
+      if (!isStandalone) return;
+      setPwaUpdateStatus('Não foi possível atualizar. Verifique sua conexão e tente novamente.');
+      if (pwaUpdateRetry) pwaUpdateRetry.hidden = false;
+      applyInteractionBlock();
+    };
+
+    if (pwaUpdateRetry) {
+      pwaUpdateRetry.addEventListener('click', () => window.location.reload());
+    }
+
+    // Installed PWAs check and apply the newest cache before releasing the game.
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('[PWA] Service Worker registrado:', reg.scope))
-          .catch((err) => console.warn('[PWA] Erro ao registrar Service Worker:', err));
-      });
+      const checkedWorkers = new WeakSet();
+
+      const registerAndCheckForUpdates = async () => {
+        if (isStandalone && !navigator.onLine) {
+          setPwaUpdateStatus('Sem conexão. Abrindo a última versão instalada...');
+          window.setTimeout(releasePwaUpdateLock, 900);
+          return;
+        }
+
+        try {
+          const registration = await navigator.serviceWorker.register('./sw.js', {
+            updateViaCache: 'none'
+          });
+          console.log('[PWA] Service Worker registrado:', registration.scope);
+
+          let updateFound = false;
+          const watchWorker = (worker) => {
+            if (!worker || checkedWorkers.has(worker)) return;
+            checkedWorkers.add(worker);
+            updateFound = true;
+            if (isStandalone) {
+              setPwaUpdateStatus('Baixando a nova versão...');
+              applyInteractionBlock();
+            }
+
+            const handleState = () => {
+              if (worker.state === 'installed') {
+                setPwaUpdateStatus('Aplicando a nova versão...');
+                registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+              } else if (worker.state === 'activated') {
+                setPwaUpdateStatus('Nova versão instalada. Reiniciando...');
+              } else if (worker.state === 'redundant') {
+                failPwaUpdate(new Error('A instalação do Service Worker foi descartada.'));
+              }
+            };
+
+            worker.addEventListener('statechange', handleState);
+            handleState();
+          };
+
+          registration.addEventListener('updatefound', () => watchWorker(registration.installing));
+          watchWorker(registration.installing);
+
+          if (registration.waiting) {
+            updateFound = true;
+            setPwaUpdateStatus('Aplicando a nova versão...');
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+
+          await registration.update();
+          watchWorker(registration.installing);
+
+          if (!updateFound && !registration.installing && !registration.waiting) {
+            releasePwaUpdateLock();
+          }
+        } catch (error) {
+          failPwaUpdate(error);
+        }
+      };
+
+      registerAndCheckForUpdates();
+    } else if (isStandalone) {
+      failPwaUpdate(new Error('Service Worker não suportado neste navegador.'));
     }
 
     // Modal How To Play

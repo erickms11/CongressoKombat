@@ -1,5 +1,6 @@
 // sw.js - Service Worker for Congresso Kombat PWA
-const CACHE_NAME = 'congresso-kombat-v2';
+// Increment this version on every release so installed PWAs must refresh their app shell.
+const CACHE_NAME = 'congresso-kombat-v3';
 
 const STATIC_ASSETS = [
   './',
@@ -46,22 +47,43 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      const freshRequests = STATIC_ASSETS.map((asset) => new Request(
+        new URL(asset, self.location.href),
+        { cache: 'reload' }
+      ));
+      return cache.addAll(freshRequests);
     }).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', (event) => {
+  let replacingExistingVersion = false;
   event.waitUntil(
     caches.keys().then((keys) => {
+      replacingExistingVersion = keys.some(
+        (key) => key.startsWith('congresso-kombat-') && key !== CACHE_NAME
+      );
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
+          if (key.startsWith('congresso-kombat-') && key !== CACHE_NAME) {
             return caches.delete(key);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => self.clients.claim()).then(async () => {
+      if (!replacingExistingVersion) return;
+      const windowClients = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true
+      });
+      await Promise.all(windowClients.map(async (client) => {
+        try {
+          await client.navigate(client.url);
+        } catch (error) {
+          console.error('[PWA] Não foi possível recarregar o cliente após a atualização:', error);
+        }
+      }));
+    })
   );
 });
 
@@ -74,20 +96,38 @@ self.addEventListener('fetch', (event) => {
   // For peerjs signaling or external APIs, bypass service worker
   if (url.origin !== self.location.origin) return;
 
-  // Stale-While-Revalidate strategy for internal assets
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' }).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', responseToCache));
         }
         return networkResponse;
-      }).catch(() => cachedResponse);
+      }).catch(() => caches.match('./index.html').then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        throw new Error('Página inicial indisponível offline.');
+      }))
+    );
+    return;
+  }
 
-      return cachedResponse || fetchPromise;
+  // The versioned cache is populated before activation; missing runtime assets fall back to network.
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) return cachedResponse;
+      return fetch(event.request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200) return networkResponse;
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+        return networkResponse;
+      });
     })
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
