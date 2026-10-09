@@ -1,5 +1,5 @@
 // touchControls.js - Virtual On-Screen Touch Controls for Mobile & PWA
-// Provides multi-touch D-Pad and 6-button arcade action layout with haptics
+// Provides multi-touch D-Pad and arcade action layout with haptics
 
 class TouchControls {
   constructor() {
@@ -17,7 +17,7 @@ class TouchControls {
       kick: false,
       special: false,
       super: false,
-      start: false
+      block: false
     };
 
     // Menu action edge triggers (true for 1 frame)
@@ -27,11 +27,10 @@ class TouchControls {
       left: false,
       right: false,
       confirm: false,
-      back: false,
-      start: false
+      back: false
     };
 
-    // Context of the START button: 'menu' | 'select' | 'fight'
+    // Action buttons are contextual: menu/select or fight.
     this.context = 'menu';
 
     this.activeTouches = new Map(); // identifier -> button key
@@ -69,15 +68,33 @@ class TouchControls {
     this.updateVisibility();
   }
 
-  // Sets the START button meaning: 'menu' -> SELECIONAR, 'select' -> CONFIRMAR, 'fight' -> PAUSE.
+  // Outside fights, LP selects and LK goes back. In fights they keep their attack actions.
   setContext(context) {
-    const labels = { menu: 'SELECIONAR', select: 'CONFIRMAR', fight: 'PAUSE' };
-    if (!labels[context]) return;
+    if (context !== 'menu' && context !== 'fight') return;
+    const contextChanged = this.context !== context;
     this.context = context;
-    const label = this.container?.querySelector('#touch-start-label');
-    if (label) label.textContent = labels[context];
-    const btn = this.container?.querySelector('[data-key="start"]');
-    if (btn) btn.title = labels[context];
+
+    const punchButton = this.container?.querySelector('[data-key="punchLight"]');
+    const kickButton = this.container?.querySelector('[data-key="kick"]');
+    if (punchButton) {
+      punchButton.querySelector('.btn-lbl').textContent = context === 'fight' ? 'LP' : 'OK';
+      punchButton.querySelector('.btn-sub').textContent = context === 'fight' ? 'SOCO' : 'SELECIONAR';
+      punchButton.setAttribute('aria-label', context === 'fight' ? 'Soco rápido' : 'Selecionar');
+    }
+    if (kickButton) {
+      kickButton.querySelector('.btn-lbl').textContent = context === 'fight' ? 'LK' : '↩';
+      kickButton.querySelector('.btn-sub').textContent = context === 'fight' ? 'CHUTE' : 'VOLTAR';
+      kickButton.setAttribute('aria-label', context === 'fight' ? 'Chute' : 'Voltar');
+    }
+
+    if (contextChanged) {
+      for (const key of ['punchLight', 'punchHeavy', 'kick', 'special', 'super', 'block']) {
+        this.state[key] = false;
+      }
+      this.actionPulses.confirm = false;
+      this.actionPulses.back = false;
+      this.container?.querySelectorAll('.touch-action-btn.active').forEach((el) => el.classList.remove('active'));
+    }
   }
 
   // Clears all held states, pulses and visual 'active' classes (stuck-state guard).
@@ -115,16 +132,6 @@ class TouchControls {
     wrapper.className = 'touch-controls-wrapper';
 
     wrapper.innerHTML = `
-      <!-- Top Utility Bar -->
-      <div class="touch-top-bar">
-        <button type="button" class="touch-btn touch-btn-util" data-key="back" title="Voltar / Cancelar">
-          <span>⮌ BACK</span>
-        </button>
-        <button type="button" class="touch-btn touch-btn-util" data-key="start" title="PAUSE">
-        <span id="touch-start-label">PAUSE</span>
-        </button>
-      </div>
-
       <!-- Left D-Pad -->
       <div class="touch-dpad-container" id="touch-dpad">
         <div class="touch-dpad-center"></div>
@@ -165,6 +172,10 @@ class TouchControls {
           <button type="button" class="touch-action-btn btn-lk" data-key="kick">
             <span class="btn-lbl">LK</span>
             <span class="btn-sub">CHUTE</span>
+          </button>
+          <button type="button" class="touch-action-btn btn-block" data-key="block" aria-label="Defesa">
+            <span class="btn-lbl">DEF</span>
+            <span class="btn-sub">DEFESA</span>
           </button>
           <button type="button" class="touch-action-btn btn-super" data-key="super">
             <span class="btn-lbl">SUPER</span>
@@ -269,22 +280,6 @@ class TouchControls {
   }
 
   setButtonState(key, isPressed) {
-    if (key === 'back') {
-      // Back only emits a pulse; it never simulates an action button
-      if (isPressed) this.actionPulses.back = true;
-      return;
-    }
-
-    if (key === 'start') {
-      this.state.start = isPressed;
-      if (isPressed) {
-        // Menus/selection: confirm. Local fight: start (pause)
-        if (this.context === 'fight') this.actionPulses.start = true;
-        else this.actionPulses.confirm = true;
-      }
-      return;
-    }
-
     if (this.state.hasOwnProperty(key)) {
       const wasFalse = !this.state[key];
       this.state[key] = isPressed;
@@ -295,7 +290,8 @@ class TouchControls {
         if (key === 'down') this.actionPulses.down = true;
         if (key === 'left') this.actionPulses.left = true;
         if (key === 'right') this.actionPulses.right = true;
-        if (key === 'punchLight') this.actionPulses.confirm = true;
+        if (this.context === 'menu' && key === 'punchLight') this.actionPulses.confirm = true;
+        if (this.context === 'menu' && key === 'kick') this.actionPulses.back = true;
       }
     }
   }
@@ -323,7 +319,7 @@ class TouchControls {
       kick: this.state.kick,
       special: this.state.special,
       super: this.state.super,
-      start: this.state.start
+      block: this.state.block
     };
   }
 
@@ -333,7 +329,7 @@ class TouchControls {
     for (const key of Object.keys(this.actionPulses)) this.actionPulses[key] = false;
   }
 
-  // Returns true once per pulse ('up'|'down'|'left'|'right'|'confirm'|'back'|'start')
+  // Returns true once per menu pulse ('up'|'down'|'left'|'right'|'confirm'|'back')
   wasAction(action) {
     if (this.actionPulses[action]) {
       this.actionPulses[action] = false;

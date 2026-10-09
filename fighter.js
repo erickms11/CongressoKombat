@@ -118,6 +118,7 @@ export class Fighter {
     this.invulnerableTimer = 0;
     this.hasHitThisAttack = false;
     this.animFrame = 0;
+    this.currentInputs = null;
 
     // Opponent reference
     this.opponent = null;
@@ -135,6 +136,10 @@ export class Fighter {
     this.opponent = opp;
   }
 
+  setInputs(inputs) {
+    this.currentInputs = inputs || null;
+  }
+
   resetRound(startX, facing) {
     this.x = startX;
     this.y = this.groundY;
@@ -150,6 +155,7 @@ export class Fighter {
     this.invulnerableTimer = 0;
     this.hasHitThisAttack = false;
     this.comboCount = 0;
+    this.currentInputs = null;
   }
 
   get isDead() {
@@ -220,6 +226,7 @@ export class Fighter {
   }
 
   update(dt, arenaWidth, projectilesList, inputs) {
+    this.setInputs(inputs);
     this.stateTimer += dt;
     this.animFrame += dt * 8;
 
@@ -308,6 +315,13 @@ export class Fighter {
   handleInputs(inpt, projectilesList) {
     if (this.state === FIGHTER_STATE.HIT || this.state === FIGHTER_STATE.KNOCKDOWN) return;
     if (this.isAttacking) return;
+
+    // Explicit guard uses the idle sprite until dedicated defense sprites are available.
+    if (inpt.block && this.isGrounded) {
+      this.state = FIGHTER_STATE.IDLE;
+      this.vx = 0;
+      return;
+    }
 
     // Crouch
     if (inpt.down && this.isGrounded) {
@@ -406,6 +420,13 @@ export class Fighter {
     this.hasHitThisAttack = false;
   }
 
+  getProjectileSpawnPoint() {
+    return {
+      x: this.x + this.facing * 96,
+      y: this.y - 138
+    };
+  }
+
   useSpecial(projectilesList) {
     this.startAttack(FIGHTER_STATE.SPECIAL, 0.45);
     this.attackCooldown = 0.8;
@@ -426,10 +447,11 @@ export class Fighter {
       else if (this.charData.id === 'flavio') pType = 'flavio_chocolate';
       else if (this.charData.id === 'campopiano') pType = 'campopiano_discourse';
 
+      const spawn = this.getProjectileSpawnPoint();
       const proj = new Projectile({
         owner: this,
-        x: this.x + this.facing * 35,
-        y: this.y - 80,
+        x: spawn.x,
+        y: spawn.y,
         vx: this.facing * 480,
         type: pType,
         color: this.charData.colors.projectile,
@@ -501,9 +523,16 @@ export class Fighter {
   takeHit({ damage, isHeavy, knockback, hitY, isProjectile = false, isSuper = false }) {
     if (this.isDead || this.isInvulnerable) return;
 
-    // Check blocking (holding backward while facing opponent)
-    const isHoldingBack = (this.facing === 1 && this.vx < 0) || (this.facing === -1 && this.vx > 0) || (this.state === FIGHTER_STATE.WALK_BACK);
-    const canBlock = isHoldingBack && !this.isAttacking && this.state !== FIGHTER_STATE.KNOCKDOWN;
+    // Guard is valid while explicitly held or while pressing away from the opponent.
+    const isHoldingAway = this.facing === 1
+      ? !!this.currentInputs?.left
+      : !!this.currentInputs?.right;
+    const wantsToBlock = !!this.currentInputs?.block || isHoldingAway || this.state === FIGHTER_STATE.WALK_BACK;
+    const canBlock = wantsToBlock &&
+      this.isGrounded &&
+      !this.isAttacking &&
+      this.state !== FIGHTER_STATE.HIT &&
+      this.state !== FIGHTER_STATE.KNOCKDOWN;
 
     if (canBlock && !isSuper) {
       // Guarded! Reduced damage & block spark

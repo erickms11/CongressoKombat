@@ -60,7 +60,8 @@ export class Projectile {
         isHeavy: this.isSuper,
         knockback: this.vx > 0 ? 300 : -300,
         hitY: this.y,
-        isProjectile: true
+        isProjectile: true,
+        isSuper: this.isSuper
       });
       particleSystem.spawnHitSparks(this.x, this.y, 16, this.color);
       particleSystem.spawnFlyingMoney(this.x, this.y, this.isSuper ? 6 : 3);

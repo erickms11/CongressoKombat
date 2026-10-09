@@ -601,39 +601,6 @@ body {
   display: none !important;
 }
 
-/* Top Utility Bar */
-.touch-top-bar {
-  position: absolute;
-  top: 10px;
-  right: 14px;
-  display: flex;
-  gap: 8px;
-  pointer-events: auto;
-  z-index: 105;
-}
-
-.touch-btn-util {
-  background: rgba(17, 24, 39, 0.85);
-  color: #ffd32a;
-  border: 1px solid rgba(255, 211, 42, 0.4);
-  padding: 6px 14px;
-  border-radius: 16px;
-  font-weight: 800;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  backdrop-filter: blur(8px);
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  transition: all 0.15s ease;
-}
-
-.touch-btn-util:active,
-.touch-btn-util.active {
-  background: #ffd32a;
-  color: #000;
-  transform: scale(0.95);
-}
-
 /* Virtual D-Pad (Left Side) */
 .touch-dpad-container {
   position: relative;
@@ -797,6 +764,16 @@ body {
 .touch-action-btn.btn-lk:active,
 .touch-action-btn.btn-lk.active {
   box-shadow: 0 0 16px rgba(230, 126, 34, 0.8);
+}
+
+.touch-action-btn.btn-block {
+  border-color: #9b59b6;
+  color: #d2a8ff;
+  background: rgba(155, 89, 182, 0.24);
+}
+.touch-action-btn.btn-block:active,
+.touch-action-btn.btn-block.active {
+  box-shadow: 0 0 16px rgba(155, 89, 182, 0.85);
 }
 
 /* Super Special CPI Button */

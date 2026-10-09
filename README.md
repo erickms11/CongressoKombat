@@ -71,16 +71,17 @@ Também é possível ajustar o **Tempo de Round (60s, 99s ou Infinito)** e salva
 | :--- | :--- |
 | **Mover / Andar** | `D-Pad ◀ / ▶` |
 | **Pular** | `D-Pad ▲` |
-| **Agachar / Bloquear** | `D-Pad ▼` |
-| **Soco Rápido** | Botão `LP` (Verde) |
+| **Agachar** | `D-Pad ▼` |
+| **Defender** | Segure `DEFESA` ou a direção oposta ao rival; reduz em 80% golpes e projéteis normais |
+| **Soco Rápido / Selecionar** | Botão `LP` (Verde); fora da luta vira `SELECIONAR` |
 | **Soco Forte** | Botão `HP` (Azul) |
-| **Chute** | Botão `LK` (Laranja) |
+| **Chute / Voltar** | Botão `LK` (Laranja); fora da luta vira `VOLTAR` |
 | **Golpe Especial** | Botão `SP` (Amarelo) |
 | **Super CPI (100%)** | Botão `SUPER` (Vermelho) |
-| **Botão superior (touch)** | Na seleção: `SELECIONAR` / `CONFIRMAR`. Na luta: `⏸ PAUSE` (Topo direito) |
-| **Voltar** | `⮌ BACK` (Topo direito): navega Oponente → Personagem → Modos → Título |
 
 *Dica no Celular:* Você também pode **tocar diretamente nas cartas dos políticos** na tela de seleção para escolhê-los!
+
+*Regra da defesa:* golpes e projéteis normais causam apenas 20% do dano ao bloquear. O **Super CPI atravessa a defesa**.
 
 *Celular em retrato:* o jogo pede para **girar o aparelho para paisagem** e para **instalar o PWA** (veja a seção de PWA abaixo).
 
@@ -91,7 +92,8 @@ Também é possível ajustar o **Tempo de Round (60s, 99s ou Infinito)** e salva
 | :--- | :--- |
 | **Mover / Andar** | `D-Pad` ou `Analógico Esquerdo (Stick)` |
 | **Pular** | `D-Pad Cima` ou `Analógico Cima` |
-| **Agachar / Bloquear** | `D-Pad Baixo` ou `Analógico Baixo` ou `LT` / `LB` |
+| **Agachar** | `D-Pad Baixo` ou `Analógico Baixo` |
+| **Defender** | Segure a direção oposta ao rival ou `LT` / `LB` |
 | **Soco Rápido** | Botão `A` (Verde) / Confirma Menus |
 | **Soco Forte** | Botão `X` (Azul) |
 | **Chute** | Botão `B` (Vermelho) / Cancela Menus |
@@ -102,9 +104,9 @@ Também é possível ajustar o **Tempo de Round (60s, 99s ou Infinito)** e salva
 ---
 
 ### ⌨️ Teclado (Jogador 1):
-- **Andar:** `A` / `D` (ou `Setas Esquerda / Direita`)
+- **Andar / Defender:** `A` / `D` (ou `Setas Esquerda / Direita`); segure a direção oposta ao rival para defender
 - **Pular:** `W` (ou `Seta Cima`)
-- **Agachar / Bloquear:** `S` (ou `Seta Baixo`)
+- **Agachar:** `S` (ou `Seta Baixo`)
 - **Soco Rápido:** `J` (ou `Z`)
 - **Soco Forte:** `K` (ou `X`)
 - **Chute:** `L` (ou `C`)
@@ -114,9 +116,9 @@ Também é possível ajustar o **Tempo de Round (60s, 99s ou Infinito)** e salva
 *No modo 2P (Versus Local), o Jogador 1 usa apenas `WASD` + `J` / `K` / `L` / `U` / `I`.*
 
 ### ⌨️ Teclado (Jogador 2 - Versus Local):
-- **Andar:** `Setas Esquerda / Direita` ou `Numpad`
+- **Andar / Defender:** `Setas Esquerda / Direita` ou `Numpad`; segure a direção oposta ao rival para defender
 - **Pular:** `Seta Cima`
-- **Agachar / Bloquear:** `Seta Baixo`
+- **Agachar:** `Seta Baixo`
 - **Soco Rápido:** `Z`
 - **Soco Forte:** `X`
 - **Chute:** `C`
