@@ -78,6 +78,7 @@ Também é possível ajustar o **Tempo de Round (60s, 99s ou Infinito)** e salva
 | **Chute / Voltar** | Botão `LK` (Laranja); fora da luta vira `VOLTAR` |
 | **Golpe Especial** | Botão `SP` (Amarelo) |
 | **Super CPI (100%)** | Botão `SUPER` (Vermelho) |
+| **Pausa no 1P vs CPU e Treino** | Botão `⏸ PAUSA`, exibido somente durante a luta |
 
 *Dica no Celular:* Você também pode **tocar diretamente nas cartas dos políticos** na tela de seleção para escolhê-los!
 
@@ -131,7 +132,9 @@ Também é possível ajustar o **Tempo de Round (60s, 99s ou Infinito)** e salva
 - Ideal para testar combos e golpes sem pressão.
 
 ### ⏸ Pausa e Voltar
-- A **pausa é local**: só funciona em partidas locais (Versus Local).
+- A **pausa é local**: funciona em 1P vs CPU, treino e Versus Local; nunca pausa uma partida online.
+- No touch, o botão `⏸ PAUSA` aparece durante as lutas 1P vs CPU e Treino.
+- Ao pausar, use `▶ CONTINUAR` para retomar ou `↩ MENU` para voltar à seleção de personagens.
 - Em uma luta local, o botão **Voltar** pausa o jogo em vez de sair.
 - O botão **Voltar** navega: Oponente → Personagem → Modos → Título.
 
