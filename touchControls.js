@@ -327,6 +327,12 @@ class TouchControls {
     };
   }
 
+  // Called once per frame after game logic: pulses no screen consumed expire here,
+  // so they cannot leak into a later screen (e.g. a D-Pad press made during a fight).
+  endFrame() {
+    for (const key of Object.keys(this.actionPulses)) this.actionPulses[key] = false;
+  }
+
   // Returns true once per pulse ('up'|'down'|'left'|'right'|'confirm'|'back'|'start')
   wasAction(action) {
     if (this.actionPulses[action]) {

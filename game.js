@@ -599,6 +599,7 @@ function gameUpdate() {
   for (const k in keys) {
     prevKeys[k] = keys[k];
   }
+  touchControls.endFrame();
 }
 
 // Pausa local: Escape/Start/touch alternam; nunca ativa no ONLINE
