@@ -55,7 +55,7 @@ export class GamepadManager {
       return {
         left: false, right: false, up: false, down: false,
         punchLight: false, punchHeavy: false, kick: false,
-        special: false, super: false, start: false, back: false
+        special: false, super: false, block: false, start: false, back: false
       };
     }
 

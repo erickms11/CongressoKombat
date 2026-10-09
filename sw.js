@@ -1,5 +1,5 @@
 // sw.js - Service Worker for Congresso Kombat PWA
-const CACHE_NAME = 'congresso-kombat-v1';
+const CACHE_NAME = 'congresso-kombat-v2';
 
 const STATIC_ASSETS = [
   './',

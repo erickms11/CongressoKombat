@@ -199,7 +199,8 @@ function getPlayerInputs(playerNum) {
       kick: kbKick || gp.kick || tc.kick,
       special: kbSpecial || gp.special || tc.special,
       super: kbSuper || gp.super || tc.super,
-      start: keys['Enter'] || gp.start || tc.start
+      block: gp.block || tc.block,
+      start: keys['Enter'] || gp.start
     };
   } else {
     // Player 2 controls (Setas+ZXCV/Espaço, Numpad + Gamepad 1)
@@ -223,6 +224,7 @@ function getPlayerInputs(playerNum) {
       kick: kbKick || gp.kick,
       special: kbSpecial || gp.special,
       super: kbSuper || gp.super,
+      block: gp.block,
       start: keys['Enter'] || gp.start
     };
   }
@@ -251,11 +253,7 @@ function checkMenuAction(playerIndex, action) {
   return false;
 }
 
-// Touch contract: setContext('menu'|'select'|'fight') and wasAction('back'|'start')
-function touchAction(action) {
-  return typeof touchControls.wasAction === 'function' && touchControls.wasAction(action);
-}
-
+// Touch contract: LP confirms and LK goes back in menus; both revert to attacks in fights.
 function setTouchContext(context) {
   if (typeof touchControls.setContext === 'function') touchControls.setContext(context);
 }
@@ -566,7 +564,7 @@ function gameUpdate() {
     screenShake = Math.max(0, screenShake - dt * 25);
   }
 
-  setTouchContext(currentScreen === SCREEN.CHAR_SELECT ? 'select' : (currentScreen === SCREEN.FIGHT ? 'fight' : 'menu'));
+  setTouchContext(currentScreen === SCREEN.FIGHT ? 'fight' : 'menu');
 
   // State Updates
   switch (currentScreen) {
@@ -584,7 +582,7 @@ function gameUpdate() {
       break;
     case SCREEN.FIGHT:
       if (updatePauseState()) {
-        if (touchAction('back') || gamepadManager.wasButtonPressed(0, 'kick')) {
+        if (gamepadManager.wasButtonPressed(0, 'kick')) {
           paused = false;
           currentScreen = SCREEN.CHAR_SELECT;
           p1Confirmed = false;
@@ -607,7 +605,7 @@ function gameUpdate() {
   touchControls.endFrame();
 }
 
-// Pausa local: Escape/Start/touch alternam; nunca ativa no ONLINE
+// Pausa local: Escape/Start alternam; nunca ativa no ONLINE
 let paused = false;
 function updatePauseState() {
   if (gameMode === 'ONLINE') {
@@ -615,11 +613,11 @@ function updatePauseState() {
     return false;
   }
 
-  if (wasKeyPressed('Escape') || gamepadManager.wasButtonPressed(0, 'start') || gamepadManager.wasButtonPressed(1, 'start') || touchAction('start')) {
+  if (wasKeyPressed('Escape') || gamepadManager.wasButtonPressed(0, 'start') || gamepadManager.wasButtonPressed(1, 'start')) {
     paused = !paused;
     arcadeAudio.menuSelect();
-  } else if (!paused && (touchAction('back') || gamepadManager.wasButtonPressed(0, 'kick'))) {
-    // Voltar durante a luta abre a pausa
+  } else if (!paused && gamepadManager.wasButtonPressed(0, 'kick')) {
+    // Botão B durante a luta abre a pausa
     paused = true;
     arcadeAudio.menuSelect();
   }
@@ -947,6 +945,8 @@ function updateFight(dt) {
       p1Inputs = getPlayerInputs(1);
       p2Inputs = remoteClientInputs;
 
+      player1.setInputs(p1Inputs);
+      player2.setInputs(p2Inputs);
       player1.update(dt, CANVAS_WIDTH, projectiles, p1Inputs);
       player2.update(dt, CANVAS_WIDTH, projectiles, p2Inputs);
     } else {
@@ -954,6 +954,8 @@ function updateFight(dt) {
       p1Inputs = getPlayerInputs(1);
       p2Inputs = gameMode === '2P' ? getPlayerInputs(2) : null;
 
+      player1.setInputs(p1Inputs);
+      player2.setInputs(p2Inputs);
       player1.update(dt, CANVAS_WIDTH, projectiles, p1Inputs);
       player2.update(dt, CANVAS_WIDTH, projectiles, p2Inputs);
     }
